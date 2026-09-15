@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SG Weather & PSI · OneMap</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#f7f5f0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>SG Weather & PSI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.onemap.gov.sg" crossorigin>
@@ -47,32 +49,37 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{font-family:'Outfit',ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1240px;margin:0 auto;padding:28px 20px 60px}
   @media(min-width:768px){.wrap{padding:40px 28px 72px}}
 
   /* Header */
   header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:20px}
-  .title-block h1{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .title-block h1{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .title-block h1 .badge-om{font-size:10.5px;font-weight:600;background:var(--accent);color:#fff;padding:3px 8px;border-radius:6px;letter-spacing:.04em;text-transform:uppercase}
   .title-block .sub{color:var(--muted);font-size:13px;margin:0}
   .title-block .sub strong{color:var(--text-2);font-weight:500}
+
+  .header-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .header-actions .btn-row{display:flex;gap:8px;align-items:center}
   .refresh-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;background:var(--surface);border:1px solid var(--line);font:500 13px/1 'Outfit',sans-serif;color:var(--text-2);cursor:pointer;transition:all .2s}
   .refresh-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
   .refresh-btn svg{transition:transform .5s}
   .refresh-btn.loading svg{transform:rotate(360deg)}
+  .lang-btn{display:inline-flex;align-items:center;justify-content:center;min-width:46px;padding:8px 12px;border-radius:9px;background:var(--surface);border:1px solid var(--line);font:600 12.5px/1 'Outfit',sans-serif;color:var(--text-2);cursor:pointer;transition:all .2s}
+  .lang-btn:hover{border-color:var(--accent);color:var(--accent)}
   .updated{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
 
   /* Controls bar */
   .controls-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
   .toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;gap:2px}
-  .toggle button{border:0;background:transparent;cursor:pointer;font:500 12.5px 'Outfit',sans-serif;color:var(--muted);padding:7px 14px;border-radius:7px;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+  .toggle button{border:0;background:transparent;cursor:pointer;font:500 12.5px 'Outfit',sans-serif;color:var(--muted);padding:8px 14px;border-radius:7px;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
   .toggle button:hover{color:var(--text-2)}
   .toggle button.active{background:var(--accent);color:#fff}
   .toggle button svg{width:13px;height:13px}
 
   .basemap-toggles{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
-  .basemap-toggles button{border:0;background:transparent;cursor:pointer;font:500 11.5px 'Outfit',sans-serif;color:var(--muted);padding:5px 10px;border-radius:6px;transition:all .15s}
+  .basemap-toggles button{border:0;background:transparent;cursor:pointer;font:500 11.5px 'Outfit',sans-serif;color:var(--muted);padding:6px 10px;border-radius:6px;transition:all .15s}
   .basemap-toggles button:hover{color:var(--text-2)}
   .basemap-toggles button.active{background:var(--text);color:#fff}
 
@@ -93,6 +100,7 @@
   .leaflet-control-attribution{font:500 10px 'Outfit',sans-serif;background:rgba(255,255,255,.85)!important}
 
   /* PSI region circle markers */
+  .psi-region-icon{display:flex;align-items:center;justify-content:center}
   .psi-region-icon .psi-circle{
     width:76px;height:76px;border-radius:50%;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -103,6 +111,7 @@
   }
   .psi-region-icon .psi-circle:hover{transform:scale(1.05)}
   .psi-region-icon .psi-circle.peak{
+    width:88px;height:88px;
     box-shadow:0 0 0 4px #0a0a0a, 0 4px 12px rgba(0,0,0,.20);
   }
   .psi-region-icon .psi-num{font-size:22px;font-weight:700;line-height:1;font-feature-settings:"tnum" 1}
@@ -138,7 +147,7 @@
   @media(max-width:880px){.panel-grid{grid-template-columns:1fr}}
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px}
   .panel h3{margin:0 0 10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;letter-spacing:-0.005em}
-  .panel h3 svg{color:var(--accent)}
+  .panel h3 svg{color:var(--accent);flex-shrink:0}
 
   .region-list{display:flex;flex-direction:column;gap:6px}
   .region-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;transition:all .12s}
@@ -147,7 +156,7 @@
   .region-row .name{font-weight:600;font-size:13px}
   .region-row .sub{font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
   .region-row .val{font:600 17px 'JetBrains Mono',monospace;letter-spacing:-0.02em}
-  .region-row .badge{font:600 10px 'Outfit',sans-serif;padding:3px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+  .region-row .badge{font:600 10px 'Outfit',sans-serif;padding:3px 7px;border-radius:999px;white-space:nowrap}
 
   .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:10px}
   .summary-tile{padding:9px 11px;border:1px solid var(--line);border-radius:9px;display:flex;flex-direction:column;gap:2px}
@@ -162,7 +171,7 @@
   .area-row:hover{background:var(--line-soft)}
   .area-row.active{background:var(--accent-soft)}
   .area-row .name{flex:1;color:var(--text);font-weight:500}
-  .area-row .desc{font-size:10.5px;color:var(--muted);font-weight:400}
+  .area-row .desc{font-size:10.5px;color:var(--muted);font-weight:400;text-align:right}
 
   .foot{font-size:11px;color:var(--muted);text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);line-height:1.7}
   .foot code{font-family:'JetBrains Mono',monospace;font-size:10.5px;background:var(--line-soft);padding:2px 6px;border-radius:4px;color:var(--text-2)}
@@ -170,6 +179,38 @@
   .sk{background:linear-gradient(90deg,var(--line-soft) 0%,#ece9df 50%,var(--line-soft) 100%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent}
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
   .err{padding:14px;background:var(--very-soft);border:1px solid var(--very);border-radius:10px;color:var(--very);font-size:12.5px}
+
+  /* ---- Mobile ---- */
+  @media(max-width:640px){
+    .wrap{padding:18px 14px calc(36px + env(safe-area-inset-bottom))}
+    header{flex-direction:column;align-items:stretch;gap:14px}
+    .title-block h1{font-size:20px}
+    .title-block .sub{font-size:12px}
+    .header-actions{align-items:stretch}
+    .header-actions .btn-row{justify-content:space-between}
+    .refresh-btn{flex:1;justify-content:center;min-height:42px}
+    .lang-btn{min-height:42px}
+    .updated{text-align:left;margin-top:2px}
+
+    .controls-bar{flex-direction:column;align-items:stretch;gap:10px}
+    .toggle,.basemap-toggles{justify-content:space-between;width:100%}
+    .toggle button{flex:1;justify-content:center;min-height:40px}
+    .basemap-toggles button{flex:1;text-align:center;min-height:36px}
+
+    #map{height:56vh;min-height:340px}
+    .psi-region-icon .psi-circle{width:56px;height:56px}
+    .psi-region-icon .psi-circle.peak{width:64px;height:64px}
+    .psi-region-icon .psi-num{font-size:17px}
+    .psi-region-icon .psi-name{font-size:8px}
+    .legend{gap:8px 12px;padding:9px 11px}
+    .legend-item{font-size:10.5px}
+    .panel{padding:12px}
+    .region-row .val{font-size:15px}
+    .summary-tile .num{font-size:18px}
+  }
+  @media(max-width:380px){
+    .title-block h1{font-size:18px}
+  }
 </style>
 </head>
 <body>
@@ -178,17 +219,20 @@
   <header>
     <div class="title-block">
       <h1>
-        Singapore Weather & PSI
+        <span data-i18n="title">Singapore Weather & PSI</span>
         <span class="badge-om">OneMap</span>
       </h1>
-      <p class="sub"><strong>2-hour rain</strong> + <strong>24-hour PSI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong></p>
+      <p class="sub" data-i18n="sub"><strong>2-hour rain</strong> + <strong>24-hour PSI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong></p>
     </div>
-    <div>
-      <button class="refresh-btn" id="refreshBtn" onclick="loadAll(true)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
-        <span id="refreshLabel">Refresh</span>
-      </button>
-      <div class="updated" id="updated">— · loading…</div>
+    <div class="header-actions">
+      <div class="btn-row">
+        <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+        <button class="refresh-btn" id="refreshBtn" onclick="loadAll(true)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
+          <span id="refreshLabel" data-i18n="refresh">Refresh</span>
+        </button>
+      </div>
+      <div class="updated" id="updated" data-i18n="loading">— · loading…</div>
     </div>
   </header>
 
@@ -196,17 +240,17 @@
     <div class="toggle" id="modeToggle">
       <button data-mode="psi" class="active">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg>
-        PSI Regions
+        <span data-i18n="modePsi">PSI Regions</span>
       </button>
       <button data-mode="rain">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg>
-        Rain Areas
+        <span data-i18n="modeRain">Rain Areas</span>
       </button>
     </div>
     <div class="basemap-toggles" id="basemapToggle">
-      <button data-style="Default" class="active">Default</button>
-      <button data-style="Night">Night</button>
-      <button data-style="Grey">Grey</button>
+      <button data-style="Default" class="active"><span data-i18n="bmDefault">Default</span></button>
+      <button data-style="Night"><span data-i18n="bmNight">Night</span></button>
+      <button data-style="Grey"><span data-i18n="bmGrey">Grey</span></button>
     </div>
   </div>
 
@@ -226,7 +270,7 @@
     </div>
   </div>
 
-  <p class="foot">
+  <p class="foot" data-i18n="foot">
     <img src="https://mobile.onemap.gov.sg/web/2025/images/icons/onemap_logo.svg" alt="OneMap" style="height:18px;vertical-align:middle;margin-right:6px">
     Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>
     Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code>. Click a region/area to highlight it on the map.
@@ -235,6 +279,56 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
 <script>
+// ============================================================
+//  i18n
+// ============================================================
+const I18N = {
+  en: {
+    title:"Singapore Weather & PSI",
+    sub:"<strong>2-hour rain</strong> + <strong>24-hour PSI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
+    refresh:"Refresh", loading:"— · loading…",
+    modePsi:"PSI Regions", modeRain:"Rain Areas",
+    bmDefault:"Default", bmNight:"Night", bmGrey:"Grey",
+    updatedText:"Updated {t} SGT{m}", updatedManual:" · manual",
+    ppsiTitle:"PSI by Region", rainTitle:"Forecast by Area",
+    subTitle:"Substance Sub-Indices", distTitle:"Forecast Distribution",
+    bandGood:"Good", bandModerate:"Moderate", bandUnhealthy:"Unhealthy", bandVery:"Very Unhealthy", bandHazard:"Hazardous",
+    rkLight:"Light Rain / Showers", rkHeavy:"Heavy Rain", rkThundery:"Thundery Showers", rkCloudy:"Cloudy / Overcast", rkSun:"Fair (Day)", rkMoon:"Fair (Night)", rkOther:"Other",
+    pollutant:"Pollutant",
+    pmLine:"PM2.5 {pm25} · PM10 {pm10}",
+    bandNote:"Color reflects NEA PSI band for that single-pollutant value.",
+    clickNote:"Click any area on the map or list to highlight its location.",
+    foot:'Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code>. Click a region/area to highlight it on the map.',
+    errLoad:"Failed to load data.",
+    langOther:"中文"
+  },
+  zh: {
+    title:"新加坡天气与 PSI",
+    sub:"<strong>2小时降雨</strong> + <strong>24小时 PSI</strong> · 实时 · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
+    refresh:"刷新", loading:"— · 加载中…",
+    modePsi:"PSI 区域", modeRain:"降雨区域",
+    bmDefault:"标准", bmNight:"夜间", bmGrey:"灰阶",
+    updatedText:"更新于 {t} SGT{m}", updatedManual:" · 手动",
+    ppsiTitle:"各区 PSI", rainTitle:"各区预报",
+    subTitle:"污染物子指数", distTitle:"预报分布",
+    bandGood:"优", bandModerate:"中等", bandUnhealthy:"不健康", bandVery:"非常不健康", bandHazard:"危险",
+    rkLight:"小雨 / 阵雨", rkHeavy:"大雨", rkThundery:"雷阵雨", rkCloudy:"多云 / 阴天", rkSun:"晴（日间）", rkMoon:"晴（夜间）", rkOther:"其他",
+    pollutant:"污染物",
+    pmLine:"PM2.5 {pm25} · PM10 {pm10}",
+    bandNote:"颜色表示该单项污染物对应的 NEA PSI 等级。",
+    clickNote:"点击地图或列表中的任意区域以在地图上高亮。",
+    foot:'底图 &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> 贡献者 · 新加坡土地管理局。<br>数据来源：<code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code>。点击区域可在地图上高亮。',
+    errLoad:"数据加载失败。",
+    langOther:"EN"
+  }
+};
+function t(key){ return (I18N[LANG] && I18N[LANG][key]!=null) ? I18N[LANG][key] : key; }
+
+let LANG = (function(){
+  try{ const s=localStorage.getItem('sgw_lang'); if(s==='zh'||s==='en') return s; }catch(e){}
+  return (navigator.language||"en").toLowerCase().startsWith("zh") ? "zh" : "en";
+})();
+
 // ============================================================
 //  Constants & helpers
 // ============================================================
@@ -246,8 +340,10 @@ const ONEMAP_STYLES=["Default","Night","Grey"];
 const ONEMAP_ATTR = '&copy; <a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a> &copy; contributors | Singapore Land Authority';
 
 const REGIONS=["west","north","central","east","south"];
+const REGION_ZH={west:"西部",north:"北部",central:"中部",east:"东部",south:"南部"};
+function regionName(k){ return LANG==='zh' ? (REGION_ZH[k]||cap(k)) : cap(k); }
 
-// PSI region centroids (from NEA API label_location) — used to place circles
+// PSI region centroids (from NEA API label_location) — true anchor points
 const REGION_CENTROIDS={
   west:    [1.35735,103.700],
   north:   [1.41803,103.820],
@@ -256,31 +352,49 @@ const REGION_CENTROIDS={
   south:   [1.29587,103.820]
 };
 
-function psiBand(v){
-  if(v<=50)  return {label:"Good",          color:"#22c55e", range:"0-50"};
-  if(v<=100) return {label:"Moderate",      color:"#84cc16", range:"51-100"};
-  if(v<=200) return {label:"Unhealthy",     color:"#f59e0b", range:"101-200"};
-  if(v<=300) return {label:"Very Unhealthy",color:"#ea580c", range:"201-300"};
-  return            {label:"Hazardous",      color:"#b91c1c", range:">300"};
+// On narrow screens the E/W bubbles would otherwise be clipped by the rim (the map is
+// fitted to the true centroids, which span wider than a phone is tall/wide). Nudge only
+// W/E markers horizontally inward — just enough to keep the whole bubble visible.
+// Desktop is untouched, and the underlying data anchor stays at the real centroid.
+function displayLatLng(k){
+  const c=REGION_CENTROIDS[k];
+  if(window.innerWidth>=640 || (k!=="west" && k!=="east")) return c;
+  const BUBBLE_R=32, GAP=6;                 // 64px peak bubble /2 + a small gap to the rim
+  const size=map.getSize();
+  const p=map.latLngToContainerPoint(L.latLng(c[0],c[1]));
+  if(k==="west") p.x=Math.max(p.x, BUBBLE_R+GAP);
+  else           p.x=Math.min(p.x, size.x-(BUBBLE_R+GAP));
+  const ll=map.containerPointToLatLng(p);
+  return [ll.lat, ll.lng];
 }
+
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+function psiBand(v){
+  if(v<=50)  return {labelKey:"bandGood",          color:"#22c55e", range:"0-50"};
+  if(v<=100) return {labelKey:"bandModerate",      color:"#84cc16", range:"51-100"};
+  if(v<=200) return {labelKey:"bandUnhealthy",     color:"#f59e0b", range:"101-200"};
+  if(v<=300) return {labelKey:"bandVery",          color:"#ea580c", range:"201-300"};
+  return            {labelKey:"bandHazard",         color:"#b91c1c", range:">300"};
+}
+function bandLabel(b){ return t(b.labelKey); }
 
 // NEA-style bands for legend (fixed palette regardless of data)
 const LEGION_BANDS=[
-  {range:"0-50",    label:"Good",           color:"#22c55e"},
-  {range:"51-100",  label:"Moderate",       color:"#84cc16"},
-  {range:"101-200", label:"Unhealthy",      color:"#f59e0b"},
-  {range:"201-300", label:"Very unhealthy", color:"#ea580c"},
-  {range:">300",    label:"Hazardous",      color:"#b91c1c"}
+  {range:"0-50",    labelKey:"bandGood",           color:"#22c55e"},
+  {range:"51-100",  labelKey:"bandModerate",       color:"#84cc16"},
+  {range:"101-200", labelKey:"bandUnhealthy",      color:"#f59e0b"},
+  {range:"201-300", labelKey:"bandVery",           color:"#ea580c"},
+  {range:">300",    labelKey:"bandHazard",         color:"#b91c1c"}
 ];
 
 function rainKind(text){
-  const t=text.toLowerCase();
-  if(t.includes("thunder")) return "thundery";
-  if(t.includes("heavy"))   return "heavy";
-  if(t.includes("rain")||t.includes("shower")) return "rain";
-  if(t.includes("cloud"))   return "cloudy";
-  if(t.includes("fair (day)")||t.includes("sunny")) return "sun";
-  if(t.includes("night")||t.includes("moon"))  return "moon";
+  const t2=text.toLowerCase();
+  if(t2.includes("thunder")) return "thundery";
+  if(t2.includes("heavy"))   return "heavy";
+  if(t2.includes("rain")||t2.includes("shower")) return "rain";
+  if(t2.includes("cloud"))   return "cloudy";
+  if(t2.includes("fair (day)")||t2.includes("sunny")) return "sun";
+  if(t2.includes("night")||t2.includes("moon"))  return "moon";
   return "cloudy";
 }
 function rainRadius(kind){
@@ -291,7 +405,36 @@ function rainColor(kind){
   return ({rain:"#0ea5e9",heavy:"#0284c7",thundery:"#7c3aed",cloudy:"#94a3b8",sun:"#94a3b8",moon:"#94a3b8"})[kind]||"#94a3b8";
 }
 function rainLabel(kind){
-  return ({rain:"Light Rain / Showers",heavy:"Heavy Rain",thundery:"Thundery Showers",cloudy:"Cloudy / Overcast",sun:"Fair (Day)",moon:"Fair (Night)"})[kind]||"Other";
+  const k=({rain:"rkLight",heavy:"rkHeavy",thundery:"rkThundery",cloudy:"rkCloudy",sun:"rkSun",moon:"rkMoon"})[kind]||"rkOther";
+  return t(k);
+}
+// Translate NEA 2-hour forecast phrasing (API returns English)
+function trForecast(s){
+  if(LANG==='en') return s;
+  const m={
+    "Cloudy":"多云","Partly Cloudy":"局部多云","Overcast":"阴天","Sunny":"晴","Fair":"晴",
+    "Light Rain":"小雨","Moderate Rain":"中雨","Heavy Rain":"大雨","Rain":"雨",
+    "Light Showers":"小阵雨","Showers":"阵雨","Heavy Showers":"强阵雨",
+    "Thundery Showers":"雷阵雨","Thundery Showers with Gusty Winds":"雷阵雨伴阵风",
+    "Windy":"大风","Mist":"薄雾","Hazy":"雾霾","Slightly Hazy":"轻微雾霾","Fog":"雾",
+    "Cloudy with Light Rain":"多云有小雨","Cloudy with Moderate Rain":"多云有中雨",
+    "Cloudy with Heavy Rain":"多云有大雨","Cloudy with Showers":"多云有阵雨",
+    "Cloudy with Thundery Showers":"多云有雷阵雨","Windy with Showers":"大风伴阵雨",
+    "Windy with Rain":"大风伴雨","Hazy with Light Rain":"雾霾伴小雨"
+  };
+  if(m[s]) return m[s];
+  let o=s;
+  o=o.replace(/Thundery Showers with Gusty Winds/i,"雷阵雨伴阵风")
+     .replace(/Thundery Showers/i,"雷阵雨")
+     .replace(/Light Showers/i,"小阵雨").replace(/Heavy Showers/i,"强阵雨").replace(/Showers/i,"阵雨")
+     .replace(/with Gusty Winds/i,"伴阵风")
+     .replace(/Light Rain/i,"小雨").replace(/Moderate Rain/i,"中雨").replace(/Heavy Rain/i,"大雨")
+     .replace(/with Light Rain/i,"有小雨").replace(/with Moderate Rain/i,"有中雨").replace(/with Heavy Rain/i,"有大雨")
+     .replace(/with Thundery Showers/i,"有雷阵雨").replace(/with Showers/i,"有阵雨").replace(/with Rain/i,"有雨")
+     .replace(/Thundery/i,"雷阵雨").replace(/Cloudy/i,"多云").replace(/Partly Cloudy/i,"局部多云")
+     .replace(/Windy/i,"大风").replace(/Sunny/i,"晴").replace(/Fair/i,"晴").replace(/Rain/i,"雨")
+     .replace(/Mist/i,"薄雾").replace(/Hazy/i,"雾霾").replace(/Slightly/i,"轻微").replace(/Fog/i,"雾").replace(/Overcast/i,"阴天");
+  return o;
 }
 
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
@@ -302,20 +445,72 @@ function fmtDayTime(iso){return fmtDate(iso)+" "+fmtTime(iso)}
 // ============================================================
 //  State + Leaflet init
 // ============================================================
-const state={mode:"psi",psi:null,rain:null,activeKey:null,firstPSI:true};
+const state={mode:"psi",basemap:"Default",psi:null,rain:null,activeKey:null,firstPSI:true,lastTs:null,lastManual:false};
 
-const map=L.map("map",{zoomControl:true,attributionControl:true})
+const map=L.map("map",{zoomControl:true,attributionControl:true,zoomSnap:0.25})
   .setView([1.3521,103.8198],12);
 
-let tileLayer=L.tileLayer(`${ONEMAP_BASE}/{style}/{z}/{x}/{y}.png`,{
-  style:"Default",
+// --- Basemap layers -------------------------------------------------------
+// Do NOT switch styles via tileLayer.setUrl(). Leaflet 1.9.4's GridLayer.redraw() does
+//   this._tileZoom = this._clampZoom(this._map.getZoom())   // ← no Math.round()
+// whereas _setView() (used on layer add / zoom) does Math.round(). With zoomSnap:0.25 our
+// map sits at a fractional zoom (10.75), so setUrl() rebuilds the grid at z=10.75 and the
+// browser requests /tiles/<style>/10.75/<x>/<y>.png -> 404 -> blank basemap.
+// Building a fresh layer goes through onAdd -> _resetView -> _setView, which rounds to z=11.
+// OneMap answers HTTP 200 with a ZERO-BYTE body for tiles that fall entirely outside
+// Singapore's coverage (e.g. z10/805/508, z11/1612/1014). <img> can't decode 0 bytes, so
+// naturalWidth stays 0 and the tile paints nothing — visible blank bands whenever the
+// viewport reaches past the coverage box (landscape / zoomed out).
+// Those partial boundary tiles reveal the fill OneMap uses beyond coverage, so we use the
+// same colour as the map background and the gaps blend into open sea.
+const STYLE_BG={Default:"#6da8e4",Night:"#003753",Grey:"#d1d1d1"};
+function applyBasemapBg(style){
+  map.getContainer().style.background=STYLE_BG[style]||STYLE_BG.Default;
+}
+
+const TILE_OPTS={
   maxZoom:19,
-  minZoom:11,
+  minZoom:10,        // OneMap supports z>=10; 11 clamped fitBounds on narrow phones and pushed W/E regions off-screen
   attribution:ONEMAP_ATTR,
   errorTileUrl:""
-}).addTo(map);
+};
+const tileUrl=style=>`${ONEMAP_BASE}/${style}/{z}/{x}/{y}.png`;
+const tileLayers=[];  // mounted basemaps, oldest first — only the newest should survive
+
+function pruneTileLayers(){
+  while(tileLayers.length>1){
+    const l=tileLayers.shift();
+    if(map.hasLayer(l)) map.removeLayer(l);
+  }
+}
+
+let tileLayer=L.tileLayer(tileUrl("Default"),TILE_OPTS).addTo(map);
+tileLayers.push(tileLayer);
+applyBasemapBg("Default");
+
+function setBasemap(style){
+  if(state.basemap===style) return;
+  state.basemap=style;
+  const next=L.tileLayer(tileUrl(style),TILE_OPTS);
+  next.once("load",pruneTileLayers);   // new tiles are in — retire the previous basemap
+  next.addTo(map);
+  tileLayers.push(next);
+  tileLayer=next;
+  applyBasemapBg(style);
+  setTimeout(pruneTileLayers,2500);    // safety net if "load" never fires
+}
 
 L.control.scale({imperial:false,position:"bottomleft"}).addTo(map);
+
+// Keep the map correctly sized when the viewport changes (orientation flip, mobile browser chrome).
+// Re-render afterwards so the mobile W/E marker nudge is recomputed for the new size.
+let _vpTimer;
+function onViewportChange(){
+  clearTimeout(_vpTimer);
+  _vpTimer=setTimeout(()=>{map.invalidateSize(); if(state.psi||state.rain) renderAll();},250);
+}
+window.addEventListener("orientationchange",onViewportChange);
+window.addEventListener("resize",onViewportChange);
 
 let dataLayer=L.layerGroup().addTo(map);
 let labelLayer=L.layerGroup().addTo(map);
@@ -325,19 +520,25 @@ let labelLayer=L.layerGroup().addTo(map);
 // ============================================================
 async function loadAll(manual=false){
   const btn=document.getElementById("refreshBtn"),lbl=document.getElementById("refreshLabel");
-  btn.classList.add("loading");lbl.textContent="Loading…";
+  btn.classList.add("loading");lbl.textContent=t("loading");
   try{
     const [psi,rain]=await Promise.all([fetch(PSI_URL).then(r=>r.json()),fetch(RAIN_URL).then(r=>r.json())]);
     state.psi=psi;state.rain=rain;state.activeKey=null;
     renderAll();
     const ts=psi.items[0].update_timestamp;
-    document.getElementById("updated").textContent=`Updated ${fmtDayTime(ts)} SGT`+(manual?" · manual":"");
+    state.lastTs=ts;state.lastManual=manual;
+    setUpdated(ts,manual);
   }catch(e){
     document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${e.message}</div>`;
-    document.getElementById("rightPanelBody").innerHTML=`<div class="err">⚠️ Failed to load.</div>`;
+    document.getElementById("rightPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
   }finally{
-    btn.classList.remove("loading");lbl.textContent="Refresh";
+    btn.classList.remove("loading");lbl.textContent=t("refresh");
   }
+}
+
+function setUpdated(ts,manual){
+  const s=t("updatedText").replace("{t}",fmtDayTime(ts)).replace("{m}",manual?t("updatedManual"):"");
+  document.getElementById("updated").textContent=s;
 }
 
 // ============================================================
@@ -361,7 +562,12 @@ function renderPSI(){
   if(state.firstPSI){
     const pts=REGIONS.map(k=>REGION_CENTROIDS[k]);
     const bounds=L.latLngBounds(pts);
-    map.fitBounds(bounds,{padding:[60,60],maxZoom:12});
+    // Narrow screens: no horizontal padding so we can zoom in further — E/W bubbles may touch the rim,
+    // the value stays readable as long as the centroid remains inside. Keep a little vertical padding.
+    const pad=window.innerWidth<640?[0,40]:[60,60];
+    // animate:false → the view is final synchronously, so displayLatLng() below projects against the
+    // real end state (an animated fit would make the W/E nudge read a stale zoom and land wrong).
+    map.fitBounds(bounds,{padding:pad,maxZoom:12,animate:false});
     state.firstPSI=false;
   }
 
@@ -371,20 +577,20 @@ function renderPSI(){
     const b=psiBand(v);
     const isPeak=idx===peakIdx;
     const active=state.activeKey===k;
-    const [lat,lon]=REGION_CENTROIDS[k];
+    const [lat,lon]=displayLatLng(k);
 
     const icon=L.divIcon({
       className:"psi-region-icon",
       html:`<div class="psi-circle ${isPeak?'peak':''} ${active?'active':''}" style="background:${b.color}">
         <div class="psi-num">${v}</div>
-        <div class="psi-name">${cap(k)}</div>
+        <div class="psi-name">${regionName(k)}</div>
       </div>`,
       iconSize:isPeak?[88,88]:[76,76],
       iconAnchor:isPeak?[44,44]:[38,38]
     });
     L.marker([lat,lon],{icon})
       .bindTooltip(
-        `<strong>${cap(k)} · PSI ${v}</strong><span class="meta">${b.label} · PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}</span>`,
+        `<strong>${regionName(k)} · PSI ${v}</strong><span class="meta">${bandLabel(b)} · PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}</span>`,
         {className:"region-tip",direction:"top",sticky:true,offset:[0,-8]}
       )
       .on("click",()=>{state.activeKey=state.activeKey===k?null:k;renderAll();})
@@ -416,7 +622,7 @@ function renderRain(){
     });
     L.marker([lat,lon],{icon})
       .bindTooltip(
-        `<strong>${a.name}</strong><span class="meta">${f}</span>`,
+        `<strong>${a.name}</strong><span class="meta">${trForecast(f)}</span>`,
         {className:"region-tip",direction:"top",sticky:true,offset:[0,-10]}
       )
       .on("click",()=>{state.activeKey=state.activeKey===a.name?null:a.name;renderAll();})
@@ -442,7 +648,7 @@ function renderLegend(){
   const lg=document.getElementById("legend");
   if(state.mode==="psi"){
     // In PSI mode the legend panel is on the map itself; bottom legend just shows the 5 NEA bands compactly
-    lg.innerHTML=LEGION_BANDS.map(b=>`<span class="legend-item"><span class="legend-swatch" style="background:${b.color}"></span><span><strong>${b.range}</strong> · ${b.label}</span></span>`).join("");
+    lg.innerHTML=LEGION_BANDS.map(b=>`<span class="legend-item"><span class="legend-swatch" style="background:${b.color}"></span><span><strong>${b.range}</strong> · ${bandLabel(b)}</span></span>`).join("");
   } else {
     const item=state.rain.items[0];
     const counts={};item.forecasts.forEach(f=>{const k=rainKind(f.forecast);counts[k]=(counts[k]||0)+1});
@@ -463,16 +669,16 @@ function renderPanels(){
 }
 
 function setLeftPSI(){
-  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg> PSI by Region`;
+  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg> `+t("ppsiTitle");
 }
 function setLeftRain(){
-  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg> Forecast by Area`;
+  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg> `+t("rainTitle");
 }
 function setRightSubstance(){
-  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> Substance Sub-Indices`;
+  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> `+t("subTitle");
 }
 function setRightSummary(){
-  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> Forecast Distribution`;
+  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> `+t("distTitle");
 }
 
 function renderPSIRegionList(){
@@ -481,9 +687,10 @@ function renderPSIRegionList(){
   body.innerHTML=`<div class="region-list">`+REGIONS.map(k=>{
     const v=r.psi_twenty_four_hourly[k];const b=psiBand(v);
     const active=state.activeKey===k;
+    const pm=t("pmLine").replace("{pm25}",r.pm25_twenty_four_hourly[k]).replace("{pm10}",r.pm10_twenty_four_hourly[k]);
     return `<div class="region-row ${active?'active':''}" data-key="${k}">
-      <span class="badge" style="background:${b.soft};color:${b.color}">${b.label}</span>
-      <div><div class="name">${cap(k)}</div><div class="sub">PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}</div></div>
+      <span class="badge" style="background:${hexA(b.color,.16)};color:${b.color}">${bandLabel(b)}</span>
+      <div><div class="name">${regionName(k)}</div><div class="sub">${pm}</div></div>
       <span class="val">${v}</span>
     </div>`;
   }).join("")+`</div>`;
@@ -502,8 +709,8 @@ function renderPSISubstanceTable(){
   ];
   let html=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">`;
   html+=`<thead><tr style="text-align:left;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:10px">
-    <th style="padding:6px 8px;border-bottom:1px solid var(--line)">Pollutant</th>
-    ${REGIONS.map(k=>`<th style="padding:6px 8px;border-bottom:1px solid var(--line);text-align:right">${cap(k)}</th>`).join("")}
+    <th style="padding:6px 8px;border-bottom:1px solid var(--line)">${t("pollutant")}</th>
+    ${REGIONS.map(k=>`<th style="padding:6px 8px;border-bottom:1px solid var(--line);text-align:right">${regionName(k)}</th>`).join("")}
   </tr></thead><tbody>`;
   subs.forEach(s=>{
     html+=`<tr><td style="padding:6px 8px;border-bottom:1px solid var(--line-soft);font-weight:500">${s.l}</td>`;
@@ -514,7 +721,7 @@ function renderPSISubstanceTable(){
     html+=`</tr>`;
   });
   html+=`</tbody></table></div>
-    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">Color reflects NEA PSI band for that single-pollutant value.</p>`;
+    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t("bandNote")}</p>`;
   body.innerHTML=html;
 }
 
@@ -533,7 +740,7 @@ function renderRainAreaList(){
     return `<div class="area-row ${active?'active':''}" data-area="${f.area}">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${rainColor(kind)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${rainIconPath(kind)}</svg>
       <span class="name">${f.area}</span>
-      <span class="desc">${f.forecast}</span>
+      <span class="desc">${trForecast(f.forecast)}</span>
     </div>`;
   }).join("")+`</div>`;
   body.querySelectorAll(".area-row").forEach(row=>{
@@ -564,7 +771,27 @@ function renderAreaSummary(){
     </div>
   `).join("");
   body.innerHTML=`<div class="summary-grid">${tiles}</div>
-    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">Click any area on the map or list to highlight its location.</p>`;
+    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t("clickNote")}</p>`;
+}
+
+// ============================================================
+//  Language
+// ============================================================
+function applyI18n(){
+  document.documentElement.lang = LANG==='zh' ? 'zh' : 'en';
+  document.title = t("title");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    el.innerHTML = t(el.getAttribute("data-i18n"));
+  });
+  document.getElementById("langBtn").textContent = t("langOther");
+  // Re-render dynamic content so it picks up the new language
+  if(state.psi||state.rain) renderAll();
+  if(state.lastTs) setUpdated(state.lastTs, state.lastManual);
+}
+function toggleLang(){
+  LANG = LANG==='en' ? 'zh' : 'en';
+  try{ localStorage.setItem('sgw_lang', LANG); }catch(e){}
+  applyI18n();
 }
 
 // ============================================================
@@ -584,11 +811,11 @@ document.querySelectorAll("#basemapToggle button").forEach(btn=>{
   btn.addEventListener("click",()=>{
     document.querySelectorAll("#basemapToggle button").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
-    const style=btn.getAttribute("data-style");
-    tileLayer.setUrl(`${ONEMAP_BASE}/${style}/{z}/{x}/{y}.png`);
+    setBasemap(btn.getAttribute("data-style"));
   });
 });
 
+applyI18n();
 loadAll(false);
 </script>
 </body>

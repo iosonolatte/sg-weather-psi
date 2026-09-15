@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SG Weather & PSI · OneMap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.onemap.gov.sg" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin>
+<style>
+  :root{
+    --bg:#f7f5f0;
+    --surface:#ffffff;
+    --line:#e6e2d6;
+    --line-soft:#f0ecdf;
+    --text:#0a0a0a;
+    --text-2:#3f3f46;
+    --muted:#71717a;
+    --accent:#1d6f48;
+    --accent-2:#33863f;
+    --accent-soft:rgba(29,111,72,.10);
+
+    /* PSI bands */
+    --good:#10b981;
+    --good-soft:rgba(16,185,129,.40);
+    --moderate:#f59e0b;
+    --moderate-soft:rgba(245,158,11,.42);
+    --unhealthy:#f97316;
+    --unhealthy-soft:rgba(249,115,22,.45);
+    --very:#ef4444;
+    --very-soft:rgba(239,68,68,.45);
+    --hazardous:#a855f7;
+    --hazardous-soft:rgba(168,85,247,.50);
+
+    /* Rain — more saturated, more visible */
+    --rain:#0284c7;
+    --rain-soft:rgba(2,132,199,.65);
+    --heavy:#1d4ed8;
+    --heavy-soft:rgba(29,78,216,.70);
+    --thundery:#6d28d9;
+    --thundery-soft:rgba(109,40,217,.72);
+    --cloudy:#475569;
+    --cloudy-soft:rgba(71,85,105,.55);
+    --rain-text:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:28px 20px 60px}
+  @media(min-width:768px){.wrap{padding:40px 28px 72px}}
+
+  /* Header */
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+  .title-block h1{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .title-block h1 .badge-om{font-size:10.5px;font-weight:600;background:var(--accent);color:#fff;padding:3px 8px;border-radius:6px;letter-spacing:.04em;text-transform:uppercase}
+  .title-block .sub{color:var(--muted);font-size:13px;margin:0}
+  .title-block .sub strong{color:var(--text-2);font-weight:500}
+  .refresh-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;background:var(--surface);border:1px solid var(--line);font:500 13px/1 'Outfit',sans-serif;color:var(--text-2);cursor:pointer;transition:all .2s}
+  .refresh-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+  .refresh-btn svg{transition:transform .5s}
+  .refresh-btn.loading svg{transform:rotate(360deg)}
+  .updated{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
+
+  /* Controls bar */
+  .controls-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;gap:2px}
+  .toggle button{border:0;background:transparent;cursor:pointer;font:500 12.5px 'Outfit',sans-serif;color:var(--muted);padding:7px 14px;border-radius:7px;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+  .toggle button:hover{color:var(--text-2)}
+  .toggle button.active{background:var(--accent);color:#fff}
+  .toggle button svg{width:13px;height:13px}
+
+  .basemap-toggles{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+  .basemap-toggles button{border:0;background:transparent;cursor:pointer;font:500 11.5px 'Outfit',sans-serif;color:var(--muted);padding:5px 10px;border-radius:6px;transition:all .15s}
+  .basemap-toggles button:hover{color:var(--text-2)}
+  .basemap-toggles button.active{background:var(--text);color:#fff}
+
+  /* Map card */
+  .map-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  #map{height:580px;width:100%;border-radius:8px;background:#cfe1ec;z-index:1}
+  @media(max-width:768px){#map{height:460px}}
+
+  /* Leaflet overrides */
+  .leaflet-container{font-family:inherit}
+  .leaflet-tooltip.region-tip{
+    background:rgba(10,10,10,.92);color:#fff;border:0;border-radius:8px;
+    font:500 12px 'Outfit',sans-serif;padding:7px 10px;box-shadow:0 4px 12px rgba(0,0,0,.18);
+  }
+  .leaflet-tooltip.region-tip::before{display:none}
+  .leaflet-tooltip.region-tip strong{display:block;font-size:13px;margin-bottom:1px;font-weight:600}
+  .leaflet-tooltip.region-tip .meta{font:500 10.5px 'JetBrains Mono',monospace;color:#a1a1aa}
+  .leaflet-control-attribution{font:500 10px 'Outfit',sans-serif;background:rgba(255,255,255,.85)!important}
+
+  /* PSI region circle markers */
+  .psi-region-icon .psi-circle{
+    width:76px;height:76px;border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);
+    font-family:'Outfit',sans-serif;
+    cursor:pointer;transition:transform .15s;
+  }
+  .psi-region-icon .psi-circle:hover{transform:scale(1.05)}
+  .psi-region-icon .psi-circle.peak{
+    box-shadow:0 0 0 4px #0a0a0a, 0 4px 12px rgba(0,0,0,.20);
+  }
+  .psi-region-icon .psi-num{font-size:22px;font-weight:700;line-height:1;font-feature-settings:"tnum" 1}
+  .psi-region-icon .psi-name{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+  /* Rain area icons — circular badge with weather icon inside */
+  .rain-icon-badge .rib{
+    width:100%;height:100%;
+    border-radius:50%;
+    background:#fff;
+    border:3px solid var(--c);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--c);
+    box-shadow:0 2px 10px rgba(0,0,0,.28);
+    transition:transform .15s;
+    cursor:pointer;
+  }
+  .rain-icon-badge:hover .rib{transform:scale(1.12)}
+  .rain-icon-badge .rib.active{
+    transform:scale(1.25);
+    box-shadow:0 0 0 4px #0a0a0a, 0 4px 14px rgba(0,0,0,.4);
+  }
+  .rain-icon-badge .rib svg{width:62%;height:62%}
+
+  /* Legend */
+  .legend{display:flex;flex-wrap:wrap;gap:12px;padding:11px 14px;background:var(--line-soft);border-radius:10px;border:1px solid var(--line);margin-top:10px}
+  .legend-item{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2);font-weight:500}
+  .legend-swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,.06)}
+  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+
+  /* Panels */
+  .panel-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+  @media(max-width:880px){.panel-grid{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px}
+  .panel h3{margin:0 0 10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;letter-spacing:-0.005em}
+  .panel h3 svg{color:var(--accent)}
+
+  .region-list{display:flex;flex-direction:column;gap:6px}
+  .region-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;transition:all .12s}
+  .region-row:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .region-row.active{border-color:var(--accent);background:var(--accent-soft)}
+  .region-row .name{font-weight:600;font-size:13px}
+  .region-row .sub{font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .region-row .val{font:600 17px 'JetBrains Mono',monospace;letter-spacing:-0.02em}
+  .region-row .badge{font:600 10px 'Outfit',sans-serif;padding:3px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:10px}
+  .summary-tile{padding:9px 11px;border:1px solid var(--line);border-radius:9px;display:flex;flex-direction:column;gap:2px}
+  .summary-tile .top{display:flex;align-items:center;gap:5px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;color:var(--text-2)}
+  .summary-tile .num{font-size:20px;font-weight:700;font-feature-settings:"tnum" 1;line-height:1}
+  .summary-tile .num small{font-size:11px;font-weight:500;color:var(--muted);margin-left:3px}
+
+  .area-list{display:flex;flex-direction:column;gap:3px;max-height:380px;overflow-y:auto;padding-right:4px}
+  .area-list::-webkit-scrollbar{width:5px}
+  .area-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .area-row{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:7px;font-size:12.5px;cursor:pointer;transition:background .12s}
+  .area-row:hover{background:var(--line-soft)}
+  .area-row.active{background:var(--accent-soft)}
+  .area-row .name{flex:1;color:var(--text);font-weight:500}
+  .area-row .desc{font-size:10.5px;color:var(--muted);font-weight:400}
+
+  .foot{font-size:11px;color:var(--muted);text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);line-height:1.7}
+  .foot code{font-family:'JetBrains Mono',monospace;font-size:10.5px;background:var(--line-soft);padding:2px 6px;border-radius:4px;color:var(--text-2)}
+
+  .sk{background:linear-gradient(90deg,var(--line-soft) 0%,#ece9df 50%,var(--line-soft) 100%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .err{padding:14px;background:var(--very-soft);border:1px solid var(--very);border-radius:10px;color:var(--very);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>
+        Singapore Weather & PSI
+        <span class="badge-om">OneMap</span>
+      </h1>
+      <p class="sub"><strong>2-hour rain</strong> + <strong>24-hour PSI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong></p>
+    </div>
+    <div>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadAll(true)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
+        <span id="refreshLabel">Refresh</span>
+      </button>
+      <div class="updated" id="updated">— · loading…</div>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <div class="toggle" id="modeToggle">
+      <button data-mode="psi" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg>
+        PSI Regions
+      </button>
+      <button data-mode="rain">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg>
+        Rain Areas
+      </button>
+    </div>
+    <div class="basemap-toggles" id="basemapToggle">
+      <button data-style="Default" class="active">Default</button>
+      <button data-style="Night">Night</button>
+      <button data-style="Grey">Grey</button>
+    </div>
+  </div>
+
+  <div class="map-card">
+    <div id="map"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel-grid">
+    <div class="panel">
+      <h3 id="leftPanelTitle"></h3>
+      <div id="leftPanelBody"><div class="sk" style="height:120px"></div></div>
+    </div>
+    <div class="panel">
+      <h3 id="rightPanelTitle"></h3>
+      <div id="rightPanelBody"><div class="sk" style="height:120px"></div></div>
+    </div>
+  </div>
+
+  <p class="foot">
+    <img src="https://mobile.onemap.gov.sg/web/2025/images/icons/onemap_logo.svg" alt="OneMap" style="height:18px;vertical-align:middle;margin-right:6px">
+    Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>
+    Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code>. Click a region/area to highlight it on the map.
+  </p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+<script>
+// ============================================================
+//  Constants & helpers
+// ============================================================
+const PSI_URL ="https://api.data.gov.sg/v1/environment/psi";
+const RAIN_URL="https://api.data.gov.sg/v1/environment/2-hour-weather-forecast";
+
+const ONEMAP_BASE = "https://www.onemap.gov.sg/maps/tiles";
+const ONEMAP_STYLES=["Default","Night","Grey"];
+const ONEMAP_ATTR = '&copy; <a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a> &copy; contributors | Singapore Land Authority';
+
+const REGIONS=["west","north","central","east","south"];
+
+// PSI region centroids (from NEA API label_location) — used to place circles
+const REGION_CENTROIDS={
+  west:    [1.35735,103.700],
+  north:   [1.41803,103.820],
+  east:    [1.35735,103.940],
+  central: [1.35735,103.820],
+  south:   [1.29587,103.820]
+};
+
+function psiBand(v){
+  if(v<=50)  return {label:"Good",          color:"#22c55e", range:"0-50"};
+  if(v<=100) return {label:"Moderate",      color:"#84cc16", range:"51-100"};
+  if(v<=200) return {label:"Unhealthy",     color:"#f59e0b", range:"101-200"};
+  if(v<=300) return {label:"Very Unhealthy",color:"#ea580c", range:"201-300"};
+  return            {label:"Hazardous",      color:"#b91c1c", range:">300"};
+}
+
+// NEA-style bands for legend (fixed palette regardless of data)
+const LEGION_BANDS=[
+  {range:"0-50",    label:"Good",           color:"#22c55e"},
+  {range:"51-100",  label:"Moderate",       color:"#84cc16"},
+  {range:"101-200", label:"Unhealthy",      color:"#f59e0b"},
+  {range:"201-300", label:"Very unhealthy", color:"#ea580c"},
+  {range:">300",    label:"Hazardous",      color:"#b91c1c"}
+];
+
+function rainKind(text){
+  const t=text.toLowerCase();
+  if(t.includes("thunder")) return "thundery";
+  if(t.includes("heavy"))   return "heavy";
+  if(t.includes("rain")||t.includes("shower")) return "rain";
+  if(t.includes("cloud"))   return "cloudy";
+  if(t.includes("fair (day)")||t.includes("sunny")) return "sun";
+  if(t.includes("night")||t.includes("moon"))  return "moon";
+  return "cloudy";
+}
+function rainRadius(kind){
+  // In meters for L.circle
+  return ({thundery:3500,heavy:2800,rain:2000,cloudy:1200,sun:1000,moon:1000})[kind]||1500;
+}
+function rainColor(kind){
+  return ({rain:"#0ea5e9",heavy:"#0284c7",thundery:"#7c3aed",cloudy:"#94a3b8",sun:"#94a3b8",moon:"#94a3b8"})[kind]||"#94a3b8";
+}
+function rainLabel(kind){
+  return ({rain:"Light Rain / Showers",heavy:"Heavy Rain",thundery:"Thundery Showers",cloudy:"Cloudy / Overcast",sun:"Fair (Day)",moon:"Fair (Night)"})[kind]||"Other";
+}
+
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function fmtTime(iso){return new Date(iso).toLocaleTimeString("en-SG",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"Asia/Singapore"})}
+function fmtDate(iso){return new Date(iso).toLocaleDateString("en-SG",{day:"2-digit",month:"short",timeZone:"Asia/Singapore"})}
+function fmtDayTime(iso){return fmtDate(iso)+" "+fmtTime(iso)}
+
+// ============================================================
+//  State + Leaflet init
+// ============================================================
+const state={mode:"psi",psi:null,rain:null,activeKey:null,firstPSI:true};
+
+const map=L.map("map",{zoomControl:true,attributionControl:true})
+  .setView([1.3521,103.8198],12);
+
+let tileLayer=L.tileLayer(`${ONEMAP_BASE}/{style}/{z}/{x}/{y}.png`,{
+  style:"Default",
+  maxZoom:19,
+  minZoom:11,
+  attribution:ONEMAP_ATTR,
+  errorTileUrl:""
+}).addTo(map);
+
+L.control.scale({imperial:false,position:"bottomleft"}).addTo(map);
+
+let dataLayer=L.layerGroup().addTo(map);
+let labelLayer=L.layerGroup().addTo(map);
+
+// ============================================================
+//  Fetch
+// ============================================================
+async function loadAll(manual=false){
+  const btn=document.getElementById("refreshBtn"),lbl=document.getElementById("refreshLabel");
+  btn.classList.add("loading");lbl.textContent="Loading…";
+  try{
+    const [psi,rain]=await Promise.all([fetch(PSI_URL).then(r=>r.json()),fetch(RAIN_URL).then(r=>r.json())]);
+    state.psi=psi;state.rain=rain;state.activeKey=null;
+    renderAll();
+    const ts=psi.items[0].update_timestamp;
+    document.getElementById("updated").textContent=`Updated ${fmtDayTime(ts)} SGT`+(manual?" · manual":"");
+  }catch(e){
+    document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${e.message}</div>`;
+    document.getElementById("rightPanelBody").innerHTML=`<div class="err">⚠️ Failed to load.</div>`;
+  }finally{
+    btn.classList.remove("loading");lbl.textContent="Refresh";
+  }
+}
+
+// ============================================================
+//  Render map data layers
+// ============================================================
+function renderAll(){renderMap();renderLegend();renderPanels();}
+
+function renderMap(){
+  dataLayer.clearLayers();labelLayer.clearLayers();
+  if(state.mode==="psi") renderPSI();
+  else                   renderRain();
+}
+
+function renderPSI(){
+  const r=state.psi.items[0].readings;
+  const values=REGIONS.map(k=>r.psi_twenty_four_hourly[k]);
+  const peak=Math.max(...values);
+  const peakIdx=values.indexOf(peak);
+
+  // On first PSI render, fit bounds to show all 5 regions
+  if(state.firstPSI){
+    const pts=REGIONS.map(k=>REGION_CENTROIDS[k]);
+    const bounds=L.latLngBounds(pts);
+    map.fitBounds(bounds,{padding:[60,60],maxZoom:12});
+    state.firstPSI=false;
+  }
+
+  // 5 colored circles at region centroids on the map
+  REGIONS.forEach((k,idx)=>{
+    const v=values[idx];
+    const b=psiBand(v);
+    const isPeak=idx===peakIdx;
+    const active=state.activeKey===k;
+    const [lat,lon]=REGION_CENTROIDS[k];
+
+    const icon=L.divIcon({
+      className:"psi-region-icon",
+      html:`<div class="psi-circle ${isPeak?'peak':''} ${active?'active':''}" style="background:${b.color}">
+        <div class="psi-num">${v}</div>
+        <div class="psi-name">${cap(k)}</div>
+      </div>`,
+      iconSize:isPeak?[88,88]:[76,76],
+      iconAnchor:isPeak?[44,44]:[38,38]
+    });
+    L.marker([lat,lon],{icon})
+      .bindTooltip(
+        `<strong>${cap(k)} · PSI ${v}</strong><span class="meta">${b.label} · PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}</span>`,
+        {className:"region-tip",direction:"top",sticky:true,offset:[0,-8]}
+      )
+      .on("click",()=>{state.activeKey=state.activeKey===k?null:k;renderAll();})
+      .addTo(dataLayer);
+  });
+}
+
+function renderRain(){
+  const item=state.rain.items[0];
+  const fcMap={};item.forecasts.forEach(f=>fcMap[f.area]=f.forecast);
+  const meta=item.area_metadata||state.rain.area_metadata;
+
+  meta.forEach(a=>{
+    const f=fcMap[a.name];if(!f) return;
+    const kind=rainKind(f);
+    const active=state.activeKey===a.name;
+    const lat=a.label_location.latitude,lon=a.label_location.longitude;
+    const color=rainColor(kind);
+    const size=({thundery:54,heavy:48,rain:44,cloudy:38,sun:38,moon:38})[kind]||40;
+
+    // Circular badge with weather icon — easy to read at a glance
+    const icon=L.divIcon({
+      className:`rain-icon-badge`,
+      html:`<div class="rib ${active?'active':''}" style="--c:${color}">
+        ${rainGlyphSVG(kind)}
+      </div>`,
+      iconSize:[size,size],
+      iconAnchor:[size/2,size/2]
+    });
+    L.marker([lat,lon],{icon})
+      .bindTooltip(
+        `<strong>${a.name}</strong><span class="meta">${f}</span>`,
+        {className:"region-tip",direction:"top",sticky:true,offset:[0,-10]}
+      )
+      .on("click",()=>{state.activeKey=state.activeKey===a.name?null:a.name;renderAll();})
+      .addTo(dataLayer);
+  });
+}
+
+function rainGlyphSVG(kind){
+  // Bold, recognizable weather glyphs sized for small badge
+  if(kind==="thundery") return `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13 12l-3 6h4l-2 5z"/></svg>`;
+  if(kind==="heavy")    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M8 21v.01M12 22v.01M16 21v.01" stroke-width="3"/></svg>`;
+  if(kind==="rain")     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M8 21l1.5-3M12 21l1.5-3M16 21l1.5-3"/></svg>`;
+  if(kind==="sun")      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M7 17l-1.4 1.4M18.4 5.6L17 7"/></svg>`;
+  if(kind==="moon")     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>`;
+  // cloudy (default)
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/></svg>`;
+}
+
+// ============================================================
+//  Legend
+// ============================================================
+function renderLegend(){
+  const lg=document.getElementById("legend");
+  if(state.mode==="psi"){
+    // In PSI mode the legend panel is on the map itself; bottom legend just shows the 5 NEA bands compactly
+    lg.innerHTML=LEGION_BANDS.map(b=>`<span class="legend-item"><span class="legend-swatch" style="background:${b.color}"></span><span><strong>${b.range}</strong> · ${b.label}</span></span>`).join("");
+  } else {
+    const item=state.rain.items[0];
+    const counts={};item.forecasts.forEach(f=>{const k=rainKind(f.forecast);counts[k]=(counts[k]||0)+1});
+    const order=["thundery","heavy","rain","cloudy"];
+    lg.innerHTML=order.filter(k=>counts[k]).map(k=>{
+      const rad=Math.round(rainRadius(k)/100)/10;
+      return `<span class="legend-item"><span class="legend-dot" style="background:${rainColor(k)}"></span>${rainLabel(k)} <strong>${counts[k]}</strong><span style="color:var(--muted);margin-left:4px;font-family:'JetBrains Mono',monospace;font-size:10.5px">⌀${rad}km</span></span>`;
+    }).join("");
+  }
+}
+
+// ============================================================
+//  Panels
+// ============================================================
+function renderPanels(){
+  if(state.mode==="psi"){setLeftPSI();setRightSubstance();renderPSIRegionList();renderPSISubstanceTable();}
+  else{setLeftRain();setRightSummary();renderRainAreaList();renderAreaSummary();}
+}
+
+function setLeftPSI(){
+  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg> PSI by Region`;
+}
+function setLeftRain(){
+  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg> Forecast by Area`;
+}
+function setRightSubstance(){
+  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> Substance Sub-Indices`;
+}
+function setRightSummary(){
+  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> Forecast Distribution`;
+}
+
+function renderPSIRegionList(){
+  const body=document.getElementById("leftPanelBody");
+  const r=state.psi.items[0].readings;
+  body.innerHTML=`<div class="region-list">`+REGIONS.map(k=>{
+    const v=r.psi_twenty_four_hourly[k];const b=psiBand(v);
+    const active=state.activeKey===k;
+    return `<div class="region-row ${active?'active':''}" data-key="${k}">
+      <span class="badge" style="background:${b.soft};color:${b.color}">${b.label}</span>
+      <div><div class="name">${cap(k)}</div><div class="sub">PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}</div></div>
+      <span class="val">${v}</span>
+    </div>`;
+  }).join("")+`</div>`;
+  body.querySelectorAll(".region-row").forEach(row=>{
+    row.addEventListener("click",()=>{const k=row.getAttribute("data-key");state.activeKey=state.activeKey===k?null:k;renderAll();});
+  });
+}
+
+function renderPSISubstanceTable(){
+  const body=document.getElementById("rightPanelBody");
+  const r=state.psi.items[0].readings;
+  const subs=[
+    {k:"pm25_sub_index",l:"PM2.5"},{k:"pm10_sub_index",l:"PM10"},
+    {k:"o3_sub_index",l:"O₃"},{k:"co_sub_index",l:"CO"},
+    {k:"so2_sub_index",l:"SO₂"},{k:"no2_one_hour_max",l:"NO₂ (1h)"}
+  ];
+  let html=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">`;
+  html+=`<thead><tr style="text-align:left;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:10px">
+    <th style="padding:6px 8px;border-bottom:1px solid var(--line)">Pollutant</th>
+    ${REGIONS.map(k=>`<th style="padding:6px 8px;border-bottom:1px solid var(--line);text-align:right">${cap(k)}</th>`).join("")}
+  </tr></thead><tbody>`;
+  subs.forEach(s=>{
+    html+=`<tr><td style="padding:6px 8px;border-bottom:1px solid var(--line-soft);font-weight:500">${s.l}</td>`;
+    REGIONS.forEach(k=>{
+      const v=r[s.k][k];const b=psiBand(v);
+      html+=`<td style="padding:6px 8px;border-bottom:1px solid var(--line-soft);text-align:right;font-family:'JetBrains Mono',monospace;color:${b.color};font-weight:600">${v}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>
+    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">Color reflects NEA PSI band for that single-pollutant value.</p>`;
+  body.innerHTML=html;
+}
+
+function renderRainAreaList(){
+  const body=document.getElementById("leftPanelBody");
+  const item=state.rain.items[0];
+  const order={thundery:0,heavy:1,rain:2,cloudy:3,sun:4,moon:5};
+  const sorted=[...item.forecasts].sort((a,b)=>{
+    const ka=rainKind(a.forecast),kb=rainKind(b.forecast);
+    if(order[ka]!==order[kb]) return order[ka]-order[kb];
+    return a.area.localeCompare(b.area);
+  });
+  body.innerHTML=`<div class="area-list">`+sorted.map(f=>{
+    const kind=rainKind(f.forecast);
+    const active=state.activeKey===f.area;
+    return `<div class="area-row ${active?'active':''}" data-area="${f.area}">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${rainColor(kind)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${rainIconPath(kind)}</svg>
+      <span class="name">${f.area}</span>
+      <span class="desc">${f.forecast}</span>
+    </div>`;
+  }).join("")+`</div>`;
+  body.querySelectorAll(".area-row").forEach(row=>{
+    row.addEventListener("click",()=>{const a=row.getAttribute("data-area");state.activeKey=state.activeKey===a?null:a;renderAll();});
+  });
+}
+
+function rainIconPath(kind){
+  if(kind==="thundery") return `<path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M13 12l-3 6h4l-2 4"/>`;
+  if(kind==="heavy")    return `<path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M8 21v.01"/><path d="M12 22v.01"/><path d="M16 21v.01"/>`;
+  if(kind==="rain")     return `<path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/>`;
+  return `<path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/>`;
+}
+
+function renderAreaSummary(){
+  const body=document.getElementById("rightPanelBody");
+  const item=state.rain.items[0];
+  const counts={};item.forecasts.forEach(f=>{const k=rainKind(f.forecast);counts[k]=(counts[k]||0)+1});
+  const total=item.forecasts.length;
+  const order=["thundery","heavy","rain","cloudy"];
+  const tiles=order.filter(k=>counts[k]).map(k=>`
+    <div class="summary-tile" style="border-color:${rainColor(k)}">
+      <div class="top" style="color:${rainColor(k)}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6"/></svg>
+        ${rainLabel(k)}
+      </div>
+      <div class="num">${counts[k]}<small>/ ${total}</small></div>
+    </div>
+  `).join("");
+  body.innerHTML=`<div class="summary-grid">${tiles}</div>
+    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">Click any area on the map or list to highlight its location.</p>`;
+}
+
+// ============================================================
+//  Wiring
+// ============================================================
+document.querySelectorAll("#modeToggle button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#modeToggle button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    state.mode=btn.getAttribute("data-mode");
+    state.activeKey=null;
+    renderAll();
+  });
+});
+
+document.querySelectorAll("#basemapToggle button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#basemapToggle button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const style=btn.getAttribute("data-style");
+    tileLayer.setUrl(`${ONEMAP_BASE}/${style}/{z}/{x}/{y}.png`);
+  });
+});
+
+loadAll(false);
+</script>
+</body>
+</html>

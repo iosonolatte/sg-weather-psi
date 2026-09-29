@@ -154,7 +154,7 @@
   .region-row:hover{border-color:var(--accent);background:var(--accent-soft)}
   .region-row.active{border-color:var(--accent);background:var(--accent-soft)}
   .region-row .name{font-weight:600;font-size:13px}
-  .region-row .sub{font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .region-row .sub{font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;overflow-wrap:anywhere}
   .region-row .val{font:600 17px 'JetBrains Mono',monospace;letter-spacing:-0.02em}
   .region-row .badge{font:600 10px 'Outfit',sans-serif;padding:3px 7px;border-radius:999px;white-space:nowrap}
 
@@ -174,7 +174,7 @@
   .area-row .desc{font-size:10.5px;color:var(--muted);font-weight:400;text-align:right}
 
   .foot{font-size:11px;color:var(--muted);text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);line-height:1.7}
-  .foot code{font-family:'JetBrains Mono',monospace;font-size:10.5px;background:var(--line-soft);padding:2px 6px;border-radius:4px;color:var(--text-2)}
+  .foot code{font-family:'JetBrains Mono',monospace;font-size:10.5px;background:var(--line-soft);padding:2px 6px;border-radius:4px;color:var(--text-2);overflow-wrap:anywhere}
 
   .sk{background:linear-gradient(90deg,var(--line-soft) 0%,#ece9df 50%,var(--line-soft) 100%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent}
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -268,7 +268,7 @@
       <h3 id="leftPanelTitle"></h3>
       <div id="leftPanelBody"><div class="sk" style="height:120px"></div></div>
     </div>
-    <div class="panel">
+    <div class="panel" id="rightPanel">
       <h3 id="rightPanelTitle"></h3>
       <div id="rightPanelBody"><div class="sk" style="height:120px"></div></div>
     </div>
@@ -736,9 +736,17 @@ function renderLegend(){
 //  Panels
 // ============================================================
 function renderPanels(){
-  if(state.mode==="psi"){setLeftPSI();setRightSubstance();renderPSIRegionList();renderPSISubstanceTable();}
-  else if(state.mode==="aqi"){setLeftAQI();setRightAQI();renderAQIRegionList();renderAQIDist();}
-  else{setLeftRain();setRightSummary();renderRainAreaList();renderAreaSummary();}
+  const right=document.getElementById("rightPanel");
+  if(state.mode==="psi"){
+    setLeftPSI();renderPSIRegionList();
+    // Mobile: drop the Substance Sub-Indices table — its 6-column grid forces a horizontal
+    // scroll on phones; the region list already carries PSI + PM2.5/PM10 per region.
+    if(window.innerWidth<640){ right.style.display="none"; return; }
+    right.style.display="";
+    setRightSubstance();renderPSISubstanceTable();
+  }
+  else if(state.mode==="aqi"){right.style.display="";setLeftAQI();setRightAQI();renderAQIRegionList();renderAQIDist();}
+  else{right.style.display="";setLeftRain();setRightSummary();renderRainAreaList();renderAreaSummary();}
 }
 
 function setLeftPSI(){

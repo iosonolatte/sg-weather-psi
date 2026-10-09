@@ -146,6 +146,12 @@
   .panel-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
   @media(max-width:880px){.panel-grid{grid-template-columns:1fr}}
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .panel-head h3{margin:0}
+  .window-toggle{display:inline-flex;background:var(--line-soft);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;flex-shrink:0}
+  .window-toggle button{border:0;background:transparent;cursor:pointer;font:600 11px 'Outfit',sans-serif;color:var(--muted);padding:5px 11px;border-radius:6px;transition:all .15s;letter-spacing:.02em}
+  .window-toggle button:hover{color:var(--text-2)}
+  .window-toggle button.active{background:var(--accent);color:#fff}
   .panel h3{margin:0 0 10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;letter-spacing:-0.005em}
   .panel h3 svg{color:var(--accent);flex-shrink:0}
 
@@ -205,6 +211,7 @@
     .legend{gap:8px 12px;padding:9px 11px}
     .legend-item{font-size:10.5px}
     .panel{padding:12px}
+    .window-toggle button{min-height:32px;padding:5px 13px;font-size:11.5px}
     .region-row .val{font-size:15px}
     .summary-tile .num{font-size:18px}
   }
@@ -265,7 +272,13 @@
 
   <div class="panel-grid">
     <div class="panel">
-      <h3 id="leftPanelTitle"></h3>
+      <div class="panel-head">
+        <h3 id="leftPanelTitle"></h3>
+        <div class="window-toggle" id="psiWindowToggle" style="display:none">
+          <button data-w="24h" class="active">24h</button>
+          <button data-w="1h">1h</button>
+        </div>
+      </div>
       <div id="leftPanelBody"><div class="sk" style="height:120px"></div></div>
     </div>
     <div class="panel" id="rightPanel">
@@ -277,7 +290,7 @@
   <p class="foot" data-i18n="foot">
     <img src="https://mobile.onemap.gov.sg/web/2025/images/icons/onemap_logo.svg" alt="OneMap" style="height:18px;vertical-align:middle;margin-right:6px">
     Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>
-    Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code> · AQI = US EPA scale from 24-h PM2.5. Click a region/area to highlight it on the map.
+    Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 1-h PSI derived from 1-h PM2.5 · AQI = US EPA scale from 24-h PM2.5. Click a region/area to highlight it on the map.
   </p>
 </div>
 
@@ -289,13 +302,15 @@
 const I18N = {
   en: {
     title:"Singapore Weather & PSI",
-    sub:"<strong>2-hour rain</strong> + <strong>24-hour PSI</strong> + <strong>AQI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
+    sub:"<strong>2-hour rain</strong> + <strong>PSI 24h / 1h</strong> + <strong>AQI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
     refresh:"Refresh", loading:"— · loading…",
     modePsi:"PSI Regions", modeRain:"Rain Areas", modeAqi:"AQI",
     bmDefault:"Default", bmNight:"Night", bmGrey:"Grey",
     updatedText:"Updated {t} SGT{m}", updatedManual:" · manual",
     ppsiTitle:"PSI by Region", rainTitle:"Forecast by Area",
-    subTitle:"Substance Sub-Indices", distTitle:"Forecast Distribution",
+    subTitle:"Substance Sub-Indices", subTitle24:"Substance Sub-Indices · 24h", distTitle:"Forecast Distribution",
+    pm1hLine:"PM2.5 1h {v} µg/m³",
+    psi1hNote:"1-hr PSI is derived from NEA's 1-hour PM2.5 using the PM2.5 sub-index breakpoints — NEA publishes only the 24-h PSI officially.",
     bandGood:"Good", bandModerate:"Moderate", bandUnhealthy:"Unhealthy", bandVery:"Very Unhealthy", bandHazard:"Hazardous",
     rkLight:"Light Rain / Showers", rkHeavy:"Heavy Rain", rkThundery:"Thundery Showers", rkCloudy:"Cloudy / Overcast", rkSun:"Fair (Day)", rkMoon:"Fair (Night)", rkOther:"Other",
     pollutant:"Pollutant",
@@ -306,19 +321,21 @@ const I18N = {
     aqiNote:"AQI follows the US EPA scale, computed from 24-hour PM2.5 (µg/m³) — the same \"Singapore AQI\" shown on aqicn.org. Singapore's official index is PSI (see the PSI tab).",
     bandNote:"Color reflects NEA PSI band for that single-pollutant value.",
     clickNote:"Click any area on the map or list to highlight its location.",
-    foot:'Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code> · AQI = US EPA scale from 24-h PM2.5. Click a region/area to highlight it on the map.',
+    foot:'Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 1-h PSI derived from 1-h PM2.5 · AQI = US EPA scale from 24-h PM2.5. Click a region/area to highlight it on the map.',
     errLoad:"Failed to load data.",
     langOther:"中文"
   },
   zh: {
     title:"新加坡天气与 PSI",
-    sub:"<strong>2小时降雨</strong> + <strong>24小时 PSI</strong> + <strong>AQI</strong> · 实时 · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
+    sub:"<strong>2小时降雨</strong> + <strong>PSI 24小时/1小时</strong> + <strong>AQI</strong> · 实时 · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
     refresh:"刷新", loading:"— · 加载中…",
     modePsi:"PSI 区域", modeRain:"降雨区域", modeAqi:"AQI",
     bmDefault:"标准", bmNight:"夜间", bmGrey:"灰阶",
     updatedText:"更新于 {t} SGT{m}", updatedManual:" · 手动",
     ppsiTitle:"各区 PSI", rainTitle:"各区预报",
-    subTitle:"污染物子指数", distTitle:"预报分布",
+    subTitle:"污染物子指数", subTitle24:"污染物子指数 · 24小时", distTitle:"预报分布",
+    pm1hLine:"PM2.5 1小时 {v} µg/m³",
+    psi1hNote:"1 小时 PSI 由 NEA 的 1 小时 PM2.5 按 PM2.5 分指数断点换算得出——NEA 官方仅发布 24 小时 PSI。",
     bandGood:"优", bandModerate:"中等", bandUnhealthy:"不健康", bandVery:"非常不健康", bandHazard:"危险",
     rkLight:"小雨 / 阵雨", rkHeavy:"大雨", rkThundery:"雷阵雨", rkCloudy:"多云 / 阴天", rkSun:"晴（日间）", rkMoon:"晴（夜间）", rkOther:"其他",
     pollutant:"污染物",
@@ -329,7 +346,7 @@ const I18N = {
     aqiNote:"AQI 采用美国 EPA 标准，由 24 小时 PM2.5（µg/m³）计算得出——即 aqicn.org 展示的「Singapore AQI」。新加坡官方指数为 PSI（见 PSI 标签页）。",
     bandNote:"颜色表示该单项污染物对应的 NEA PSI 等级。",
     clickNote:"点击地图或列表中的任意区域以在地图上高亮。",
-    foot:'底图 &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> 贡献者 · 新加坡土地管理局。<br>数据来源：<code>api.data.gov.sg/v1/environment/psi</code> + <code>2-hour-weather-forecast</code> · AQI 按 US EPA 标准由 24 小时 PM2.5 计算。点击区域可在地图上高亮。',
+    foot:'底图 &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> 贡献者 · 新加坡土地管理局。<br>数据来源：<code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 1 小时 PSI 由 1 小时 PM2.5 换算 · AQI 按 US EPA 标准由 24 小时 PM2.5 计算。点击区域可在地图上高亮。',
     errLoad:"数据加载失败。",
     langOther:"EN"
   }
@@ -345,6 +362,7 @@ let LANG = (function(){
 //  Constants & helpers
 // ============================================================
 const PSI_URL ="https://api.data.gov.sg/v1/environment/psi";
+const PM25_URL="https://api.data.gov.sg/v1/environment/pm25";
 const RAIN_URL="https://api.data.gov.sg/v1/environment/2-hour-weather-forecast";
 
 const ONEMAP_BASE = "https://www.onemap.gov.sg/maps/tiles";
@@ -408,6 +426,22 @@ function pm25ToAQI(c){
 function aqiBand(v){
   const seg=AQI_BP.find(s=>v<=s.iHi)||AQI_BP[AQI_BP.length-1];
   return {labelKey:seg.labelKey,color:seg.color,range:seg.iLo+"-"+seg.iHi};
+}
+
+// NEA PM2.5 sub-index breakpoints (µg/m³ → PSI). Used to derive a 1-hr PSI from the
+// /environment/pm25 endpoint's pm25_one_hourly — NEA itself only publishes the 24-h PSI.
+const NEA_PM25_BP=[
+  {cLo:0,  cHi:12,  iLo:0,   iHi:50},
+  {cLo:13, cHi:55,  iLo:51,  iHi:100},
+  {cLo:56, cHi:150, iLo:101, iHi:200},
+  {cLo:151,cHi:250, iLo:201, iHi:300},
+  {cLo:251,cHi:350, iLo:301, iHi:400},
+  {cLo:351,cHi:500, iLo:401, iHi:500}
+];
+function pm25ToPSI1h(c){
+  if(c==null||isNaN(c)) return null;
+  const s=NEA_PM25_BP.find(b=>c<=b.cHi)||NEA_PM25_BP[NEA_PM25_BP.length-1];
+  return Math.round((s.iHi-s.iLo)/(s.cHi-s.cLo)*(c-s.cLo)+s.iLo);
 }
 
 // NEA-style bands for legend (fixed palette regardless of data)
@@ -477,7 +511,7 @@ function fmtDayTime(iso){return fmtDate(iso)+" "+fmtTime(iso)}
 // ============================================================
 //  State + Leaflet init
 // ============================================================
-const state={mode:"psi",basemap:"Default",psi:null,rain:null,activeKey:null,firstPSI:true,lastTs:null,lastManual:false};
+const state={mode:"psi",basemap:"Default",psiWindow:"24h",psi:null,pm25:null,rain:null,activeKey:null,firstPSI:true,lastTs:null,lastManual:false};
 
 const map=L.map("map",{zoomControl:true,attributionControl:true,zoomSnap:0.25})
   .setView([1.3521,103.8198],12);
@@ -554,8 +588,12 @@ async function loadAll(manual=false){
   const btn=document.getElementById("refreshBtn"),lbl=document.getElementById("refreshLabel");
   btn.classList.add("loading");lbl.textContent=t("loading");
   try{
-    const [psi,rain]=await Promise.all([fetch(PSI_URL).then(r=>r.json()),fetch(RAIN_URL).then(r=>r.json())]);
-    state.psi=psi;state.rain=rain;state.activeKey=null;
+    const [psi,rain,pm25]=await Promise.all([
+      fetch(PSI_URL).then(r=>r.json()),
+      fetch(RAIN_URL).then(r=>r.json()),
+      fetch(PM25_URL).then(r=>r.json()).catch(()=>null)   // 1-hr PM2.5 powers the 1h PSI toggle
+    ]);
+    state.psi=psi;state.rain=rain;state.pm25=pm25;state.activeKey=null;
     renderAll();
     const ts=psi.items[0].update_timestamp;
     state.lastTs=ts;state.lastManual=manual;
@@ -599,9 +637,33 @@ function renderMap(){
   else                   renderRain();
 }
 
+// Active PSI series. "24h" = NEA's official PSI; "1h" = PSI-equivalent derived from
+// the 1-hour PM2.5 endpoint using NEA's PM2.5 sub-index breakpoints.
+function psiSeries(){
+  const r=state.psi.items[0].readings;
+  if(state.psiWindow==="1h"){
+    const pm=(state.pm25&&state.pm25.items[0]&&state.pm25.items[0].readings.pm25_one_hourly)||{};
+    return {
+      window:"1h",
+      values:REGIONS.map(k=>pm[k]!=null?pm25ToPSI1h(pm[k]):null),
+      pmOf:k=>(pm[k]!=null?pm[k]:null),
+      pmSub:k=>t("pm1hLine").replace("{v}",pm[k]!=null?pm[k]:"—"),
+      tipMeta:(k,b)=>`${bandLabel(b)} · PM2.5 1h ${pm[k]!=null?pm[k]+" µg/m³":"—"}`
+    };
+  }
+  return {
+    window:"24h",
+    values:REGIONS.map(k=>r.psi_twenty_four_hourly[k]),
+    pmOf:k=>r.pm25_twenty_four_hourly[k],
+    pmSub:k=>t("pmLine").replace("{pm25}",r.pm25_twenty_four_hourly[k]).replace("{pm10}",r.pm10_twenty_four_hourly[k]),
+    tipMeta:(k,b)=>`${bandLabel(b)} · PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}`
+  };
+}
+
 function renderPSI(){
   const r=state.psi.items[0].readings;
-  const values=REGIONS.map(k=>r.psi_twenty_four_hourly[k]);
+  const S=psiSeries();
+  const values=S.values;
   const peak=Math.max(...values);
   const peakIdx=values.indexOf(peak);
 
@@ -627,7 +689,7 @@ function renderPSI(){
     });
     L.marker([lat,lon],{icon})
       .bindTooltip(
-        `<strong>${regionName(k)} · PSI ${v}</strong><span class="meta">${bandLabel(b)} · PM2.5 ${r.pm25_twenty_four_hourly[k]} · PM10 ${r.pm10_twenty_four_hourly[k]}</span>`,
+        `<strong>${regionName(k)} · PSI ${S.window} ${v}</strong><span class="meta">${S.tipMeta(k,b)}</span>`,
         {className:"region-tip",direction:"top",sticky:true,offset:[0,-8]}
       )
       .on("click",()=>{state.activeKey=state.activeKey===k?null:k;renderAll();})
@@ -737,6 +799,7 @@ function renderLegend(){
 // ============================================================
 function renderPanels(){
   const right=document.getElementById("rightPanel");
+  document.getElementById("psiWindowToggle").style.display = state.mode==="psi" ? "" : "none";
   if(state.mode==="psi"){
     setLeftPSI();renderPSIRegionList();
     // Mobile: drop the Substance Sub-Indices table — its 6-column grid forces a horizontal
@@ -756,7 +819,7 @@ function setLeftRain(){
   document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg> `+t("rainTitle");
 }
 function setRightSubstance(){
-  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> `+t("subTitle");
+  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg> `+t(state.psiWindow==="1h"?"subTitle24":"subTitle");
 }
 function setRightSummary(){
   document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> `+t("distTitle");
@@ -807,17 +870,17 @@ function renderAQIDist(){
 
 function renderPSIRegionList(){
   const body=document.getElementById("leftPanelBody");
-  const r=state.psi.items[0].readings;
-  body.innerHTML=`<div class="region-list">`+REGIONS.map(k=>{
-    const v=r.psi_twenty_four_hourly[k];const b=psiBand(v);
+  const S=psiSeries();
+  body.innerHTML=`<div class="region-list">`+REGIONS.map((k,idx)=>{
+    const v=S.values[idx];const b=psiBand(v);
     const active=state.activeKey===k;
-    const pm=t("pmLine").replace("{pm25}",r.pm25_twenty_four_hourly[k]).replace("{pm10}",r.pm10_twenty_four_hourly[k]);
     return `<div class="region-row ${active?'active':''}" data-key="${k}">
       <span class="badge" style="background:${hexA(b.color,.16)};color:${b.color}">${bandLabel(b)}</span>
-      <div><div class="name">${regionName(k)}</div><div class="sub">${pm}</div></div>
-      <span class="val">${v}</span>
+      <div><div class="name">${regionName(k)}</div><div class="sub">${S.pmSub(k)}</div></div>
+      <span class="val">${v==null?"—":v}</span>
     </div>`;
-  }).join("")+`</div>`;
+  }).join("")+`</div>`
+  +(S.window==="1h"?`<p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t("psi1hNote")}</p>`:"");
   body.querySelectorAll(".region-row").forEach(row=>{
     row.addEventListener("click",()=>{const k=row.getAttribute("data-key");state.activeKey=state.activeKey===k?null:k;renderAll();});
   });
@@ -936,6 +999,16 @@ document.querySelectorAll("#basemapToggle button").forEach(btn=>{
     document.querySelectorAll("#basemapToggle button").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     setBasemap(btn.getAttribute("data-style"));
+  });
+});
+
+document.querySelectorAll("#psiWindowToggle button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#psiWindowToggle button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    state.psiWindow=btn.getAttribute("data-w");
+    state.activeKey=null;
+    if(state.psi) renderAll();
   });
 });
 

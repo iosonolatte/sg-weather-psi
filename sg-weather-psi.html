@@ -229,7 +229,7 @@
         <span data-i18n="title">Singapore Weather & PSI</span>
         <span class="badge-om">OneMap</span>
       </h1>
-      <p class="sub" data-i18n="sub"><strong>2-hour rain</strong> + <strong>24-hour PSI</strong> + <strong>AQI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong></p>
+      <p class="sub" data-i18n="sub"><strong>2-hour rain</strong> + <strong>PSI 24h / 1h</strong> + <strong>Haze (1-h PM2.5)</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong></p>
     </div>
     <div class="header-actions">
       <div class="btn-row">
@@ -251,7 +251,7 @@
       </button>
       <button data-mode="aqi">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
-        <span data-i18n="modeAqi">AQI</span>
+        <span data-i18n="modeAqi">Haze</span>
       </button>
       <button data-mode="rain">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.78 7 7 0 1 0-11.6 4.78A4.5 4.5 0 0 0 8 19h9.5Z"/><path d="M9 14v3"/><path d="M12 14v3"/><path d="M15 14v3"/></svg>
@@ -302,9 +302,9 @@
 const I18N = {
   en: {
     title:"Singapore Weather & PSI",
-    sub:"<strong>2-hour rain</strong> + <strong>PSI 24h / 1h</strong> + <strong>AQI</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
+    sub:"<strong>2-hour rain</strong> + <strong>PSI 24h / 1h</strong> + <strong>Haze (1-h PM2.5)</strong> · live · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
     refresh:"Refresh", loading:"— · loading…",
-    modePsi:"PSI Regions", modeRain:"Rain Areas", modeAqi:"AQI",
+    modePsi:"PSI Regions", modeRain:"Rain Areas", modeAqi:"Haze",
     bmDefault:"Default", bmNight:"Night", bmGrey:"Grey",
     updatedText:"Updated {t} SGT{m}", updatedManual:" · manual",
     ppsiTitle:"PSI by Region", rainTitle:"Forecast by Area",
@@ -315,21 +315,25 @@ const I18N = {
     rkLight:"Light Rain / Showers", rkHeavy:"Heavy Rain", rkThundery:"Thundery Showers", rkCloudy:"Cloudy / Overcast", rkSun:"Fair (Day)", rkMoon:"Fair (Night)", rkOther:"Other",
     pollutant:"Pollutant",
     pmLine:"PM2.5 {pm25} · PM10 {pm10}",
-    aqiTitle:"AQI by Region", aqiDistTitle:"AQI Band Distribution",
+    hazeTitle:"1-h PM2.5 by Region", hazeDistTitle:"1-h PM2.5 Band Distribution",
+    pm25Normal:"Normal", pm25Elevated:"Elevated", pm25High:"High", pm25VeryHigh:"Very High",
+    hazeRowSub:"AQI {a} (US EPA) · PSI 24h {p}",
+    hazeNote:"Numbers are the 1-hour PM2.5 concentration (µg/m³), banded with NEA's own 1-hour PM2.5 bands — the gauge NEA prescribes for current air quality. AQI (US EPA scale) and the official 24-hour PSI are shown for reference; NEA notes that 1-hour PM2.5 bands should not be compared directly with the longer-duration breakpoints used in any air-quality index.",
+    hazeNote24:"1-hour PM2.5 feed unavailable — showing US EPA AQI computed from 24-hour PM2.5 instead. Singapore's official index is the 24-hour PSI (see the PSI tab).",
     aqiGood:"Good", aqiModerate:"Moderate", aqiUSG:"Unhealthy (Sensitive)", aqiUnhealthy:"Unhealthy", aqiVery:"Very Unhealthy", aqiHazard:"Hazardous",
     pm25Line:"PM2.5 24h {v} µg/m³",
-    aqiNote:"AQI follows the US EPA scale, computed from 24-hour PM2.5 (µg/m³) — the same \"Singapore AQI\" shown on aqicn.org. Singapore's official index is PSI (see the PSI tab).",
+    aqiNote24:"AQI follows the US EPA scale, computed from 24-hour PM2.5 (µg/m³) — the same \"Singapore AQI\" shown on aqicn.org. Singapore's official index is PSI (see the PSI tab).",
     bandNote:"Color reflects NEA PSI band for that single-pollutant value.",
     clickNote:"Click any area on the map or list to highlight its location.",
-    foot:'Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 1-h PSI derived from 1-h PM2.5 · AQI = US EPA scale from 24-h PM2.5. Click a region/area to highlight it on the map.',
+    foot:'Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · Haze = 1-hour PM2.5 in NEA bands, with US EPA AQI and 24-h PSI for reference. Click a region/area to highlight it on the map.',
     errLoad:"Failed to load data.",
     langOther:"中文"
   },
   zh: {
     title:"新加坡天气与 PSI",
-    sub:"<strong>2小时降雨</strong> + <strong>PSI 24小时/1小时</strong> + <strong>AQI</strong> · 实时 · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
+    sub:"<strong>2小时降雨</strong> + <strong>PSI 24小时/1小时</strong> + <strong>烟霾（1小时 PM2.5）</strong> · 实时 · <strong>data.gov.sg</strong> + <strong>OneMap</strong>",
     refresh:"刷新", loading:"— · 加载中…",
-    modePsi:"PSI 区域", modeRain:"降雨区域", modeAqi:"AQI",
+    modePsi:"PSI 区域", modeRain:"降雨区域", modeAqi:"烟霾",
     bmDefault:"标准", bmNight:"夜间", bmGrey:"灰阶",
     updatedText:"更新于 {t} SGT{m}", updatedManual:" · 手动",
     ppsiTitle:"各区 PSI", rainTitle:"各区预报",
@@ -340,13 +344,17 @@ const I18N = {
     rkLight:"小雨 / 阵雨", rkHeavy:"大雨", rkThundery:"雷阵雨", rkCloudy:"多云 / 阴天", rkSun:"晴（日间）", rkMoon:"晴（夜间）", rkOther:"其他",
     pollutant:"污染物",
     pmLine:"PM2.5 {pm25} · PM10 {pm10}",
-    aqiTitle:"各区 AQI", aqiDistTitle:"AQI 等级分布",
+    hazeTitle:"各区 1 小时 PM2.5", hazeDistTitle:"1 小时 PM2.5 等级分布",
+    pm25Normal:"正常", pm25Elevated:"偏高", pm25High:"高", pm25VeryHigh:"很高",
+    hazeRowSub:"AQI {a}（US EPA）· 官方 PSI 24h {p}",
+    hazeNote:"数值为 1 小时 PM2.5 浓度（µg/m³），按 NEA 官方的 1 小时 PM2.5 等级划分——这是 NEA 规定的「当前空气质量」判读标准。AQI（US EPA 标准）与官方 24 小时 PSI 并列作参考；NEA 明确指出，1 小时 PM2.5 等级不应与任何空气质量指数所用的较长时段断点直接比较。",
+    hazeNote24:"1 小时 PM2.5 数据源暂不可用——改用 24 小时 PM2.5 计算的 US EPA AQI。新加坡官方指数为 24 小时 PSI（见 PSI 标签页）。",
     aqiGood:"优", aqiModerate:"中等", aqiUSG:"敏感人群不健康", aqiUnhealthy:"不健康", aqiVery:"非常不健康", aqiHazard:"危险",
     pm25Line:"PM2.5 24小时 {v} µg/m³",
-    aqiNote:"AQI 采用美国 EPA 标准，由 24 小时 PM2.5（µg/m³）计算得出——即 aqicn.org 展示的「Singapore AQI」。新加坡官方指数为 PSI（见 PSI 标签页）。",
+    aqiNote24:"AQI 采用美国 EPA 标准，由 24 小时 PM2.5（µg/m³）计算得出——即 aqicn.org 展示的「Singapore AQI」。新加坡官方指数为 PSI（见 PSI 标签页）。",
     bandNote:"颜色表示该单项污染物对应的 NEA PSI 等级。",
     clickNote:"点击地图或列表中的任意区域以在地图上高亮。",
-    foot:'底图 &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> 贡献者 · 新加坡土地管理局。<br>数据来源：<code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 1 小时 PSI 由 1 小时 PM2.5 换算 · AQI 按 US EPA 标准由 24 小时 PM2.5 计算。点击区域可在地图上高亮。',
+    foot:'底图 &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> 贡献者 · 新加坡土地管理局。<br>数据来源：<code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 烟霾 = 1 小时 PM2.5 按 NEA 等级，并列 US EPA AQI 与官方 24 小时 PSI 作参考。点击区域可在地图上高亮。',
     errLoad:"数据加载失败。",
     langOther:"EN"
   }
@@ -408,8 +416,8 @@ function psiBand(v){
 }
 function bandLabel(b){ return t(b.labelKey); }
 
-// US EPA AQI from 24-hour PM2.5 (µg/m³) — the same "Singapore AQI" aqicn.org shows.
-// NEA itself publishes PSI, not AQI; the API's per-region pm25_twenty_four_hourly is the input.
+// US EPA AQI from PM2.5 (µg/m³). Only used as a *secondary* reference here — see
+// PM25_1H_BP below for why NEA's own 1-hour bands are the primary readout.
 const AQI_BP=[
   {cLo:0.0,  cHi:9.0,   iLo:0,   iHi:50,  labelKey:"aqiGood",     color:"#16a34a"},
   {cLo:9.1,  cHi:35.4,  iLo:51,  iHi:100, labelKey:"aqiModerate", color:"#ca8a04"},
@@ -426,6 +434,44 @@ function pm25ToAQI(c){
 function aqiBand(v){
   const seg=AQI_BP.find(s=>v<=s.iHi)||AQI_BP[AQI_BP.length-1];
   return {labelKey:seg.labelKey,color:seg.color,range:seg.iLo+"-"+seg.iHi};
+}
+
+// NEA's official 1-hour PM2.5 bands (µg/m³) — the gauge NEA prescribes for
+// *current* air quality. Source: NEA air-pollution FAQ, "bands and descriptors …
+// based on the 1-hour PM2.5 concentration readings". The last column is what the
+// 24-hour PSI would be if that band held for 24 h.
+const PM25_1H_BP=[
+  {cLo:0,   cHi:55,   labelKey:"pm25Normal",   color:"#22c55e", psi:"0-100",   psiKey:"psiGoodMod"},
+  {cLo:56,  cHi:150,  labelKey:"pm25Elevated", color:"#eab308", psi:"101-200", psiKey:"psiUnhealthy"},
+  {cLo:151, cHi:250,  labelKey:"pm25High",     color:"#f97316", psi:"201-300", psiKey:"psiVeryUnhealthy"},
+  {cLo:251, cHi:1e9,  labelKey:"pm25VeryHigh", color:"#b91c1c", psi:">300",    psiKey:"psiHazardous"}
+];
+function pm25Band(c){
+  if(c==null||isNaN(c)) return null;
+  const seg=PM25_1H_BP.find(s=>c<=s.cHi)||PM25_1H_BP[PM25_1H_BP.length-1];
+  return {labelKey:seg.labelKey,color:seg.color,range:seg.cLo+"-"+(seg.cHi>=1e9?"+":seg.cHi)};
+}
+
+// AQI series: the 1-hour PM2.5 from /environment/pm25 fed into the US EPA PM2.5
+// breakpoint table (see the caveat above AQI_BP). Falls back to the 24-hour PM2.5
+// in /environment/psi when the pm25 endpoint is unavailable.
+// Haze series. Primary readout = NEA's 1-hour PM2.5 band (their prescribed gauge for
+// current air quality). Secondary = US EPA AQI (from the same 1-hour PM2.5) and the
+// official NEA 24-hour PSI, shown side by side so the three are never confused.
+// If /environment/pm25 is unavailable we fall back to AQI from the 24-hour PM2.5.
+function hazeSeries(){
+  const r=state.psi.items[0].readings;
+  const pm=(state.pm25&&state.pm25.items&&state.pm25.items[0]&&state.pm25.items[0].readings.pm25_one_hourly)||null;
+  const has1h=!!pm;
+  return {
+    has1h,
+    aqiWindow:has1h?"1h":"24h",
+    pmOf:k=>(has1h?pm[k]:r.pm25_twenty_four_hourly[k]),
+    bandOf:k=>(has1h?pm25Band(pm[k]):null),
+    aqiOf:k=>pm25ToAQI(has1h?pm[k]:r.pm25_twenty_four_hourly[k]),
+    psi24Of:k=>r.psi_twenty_four_hourly[k],
+    psi24BandOf:k=>psiBand(r.psi_twenty_four_hourly[k])
+  };
 }
 
 // NEA PM2.5 sub-index breakpoints (µg/m³ → PSI). Used to derive a 1-hr PSI from the
@@ -633,7 +679,7 @@ function fitRegions(){
 function renderMap(){
   dataLayer.clearLayers();labelLayer.clearLayers();
   if(state.mode==="psi") renderPSI();
-  else if(state.mode==="aqi") renderAQI();
+  else if(state.mode==="aqi") renderHaze();
   else                   renderRain();
 }
 
@@ -697,16 +743,28 @@ function renderPSI(){
   });
 }
 
-function renderAQI(){
-  const r=state.psi.items[0].readings;
-  const values=REGIONS.map(k=>pm25ToAQI(r.pm25_twenty_four_hourly[k]));
-  const peak=Math.max(...values);
-  const peakIdx=values.indexOf(peak);
+function renderHaze(){
+  const S=hazeSeries();
+  // Primary number = 1-hour PM2.5 (µg/m³) coloured by NEA's own band.
+  // Without the 1-h feed we fall back to the US EPA AQI from 24-hour PM2.5.
+  const prim=REGIONS.map(k=>S.has1h?S.pmOf(k):S.aqiOf(k));
+  const valid=prim.filter(v=>v!=null);
+  const peak=valid.length?Math.max(...valid):null;
+  const peakIdx=prim.indexOf(peak);
   fitRegions();
 
   REGIONS.forEach((k,idx)=>{
-    const v=values[idx];
-    const b=aqiBand(v);
+    const v=prim[idx];
+    if(v==null){
+      const icon=L.divIcon({
+        className:"psi-region-icon",
+        html:`<div class="psi-circle"><div class="psi-num">—</div><div class="psi-name">${regionName(k)}</div></div>`,
+        iconSize:[76,76],iconAnchor:[38,38]
+      });
+      L.marker(displayLatLng(k),{icon}).addTo(dataLayer);
+      return;
+    }
+    const b=S.has1h?S.bandOf(k):aqiBand(v);
     const isPeak=idx===peakIdx;
     const active=state.activeKey===k;
     const [lat,lon]=displayLatLng(k);
@@ -722,7 +780,9 @@ function renderAQI(){
     });
     L.marker([lat,lon],{icon})
       .bindTooltip(
-        `<strong>${regionName(k)} · AQI ${v}</strong><span class="meta">${bandLabel(b)} · PM2.5 ${r.pm25_twenty_four_hourly[k]} µg/m³</span>`,
+        S.has1h
+          ? `<strong>${regionName(k)} · PM2.5 1h ${v} µg/m³</strong><span class="meta">${bandLabel(b)} · AQI ${S.aqiOf(k)} (US EPA) · PSI 24h ${S.psi24Of(k)}</span>`
+          : `<strong>${regionName(k)} · AQI ${v}</strong><span class="meta">${bandLabel(b)} · PM2.5 24h ${v} µg/m³</span>`,
         {className:"region-tip",direction:"top",sticky:true,offset:[0,-8]}
       )
       .on("click",()=>{state.activeKey=state.activeKey===k?null:k;renderAll();})
@@ -782,7 +842,10 @@ function renderLegend(){
     // In PSI mode the legend panel is on the map itself; bottom legend just shows the 5 NEA bands compactly
     lg.innerHTML=LEGION_BANDS.map(b=>`<span class="legend-item"><span class="legend-swatch" style="background:${b.color}"></span><span><strong>${b.range}</strong> · ${bandLabel(b)}</span></span>`).join("");
   } else if(state.mode==="aqi"){
-    lg.innerHTML=AQI_BP.map(s=>`<span class="legend-item"><span class="legend-swatch" style="background:${s.color}"></span><span><strong>${s.iLo}-${s.iHi}</strong> · ${t(s.labelKey)}</span></span>`).join("");
+    const S=hazeSeries();
+    const B=S.has1h?PM25_1H_BP:AQI_BP;
+    const rng=s=>s.range!=null?s.range:(s.cHi>=1e9? s.cLo+"+" : s.cLo+"-"+s.cHi);
+    lg.innerHTML=B.map(s=>`<span class="legend-item"><span class="legend-swatch" style="background:${s.color}"></span><span><strong>${rng(s)}</strong> · ${t(s.labelKey)}</span></span>`).join("");
   } else {
     const item=state.rain.items[0];
     const counts={};item.forecasts.forEach(f=>{const k=rainKind(f.forecast);counts[k]=(counts[k]||0)+1});
@@ -808,7 +871,7 @@ function renderPanels(){
     right.style.display="";
     setRightSubstance();renderPSISubstanceTable();
   }
-  else if(state.mode==="aqi"){right.style.display="";setLeftAQI();setRightAQI();renderAQIRegionList();renderAQIDist();}
+  else if(state.mode==="aqi"){right.style.display="";setLeftHaze();setRightHaze();renderHazeRegionList();renderHazeDist();}
   else{right.style.display="";setLeftRain();setRightSummary();renderRainAreaList();renderAreaSummary();}
 }
 
@@ -824,38 +887,49 @@ function setRightSubstance(){
 function setRightSummary(){
   document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> `+t("distTitle");
 }
-function setLeftAQI(){
-  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg> `+t("aqiTitle");
+function setLeftHaze(){
+  document.getElementById("leftPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg> `+t("hazeTitle");
 }
-function setRightAQI(){
-  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> `+t("aqiDistTitle");
+function setRightHaze(){
+  document.getElementById("rightPanelTitle").innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 12l3-3 4 4 5-5"/></svg> `+t("hazeDistTitle");
 }
 
-function renderAQIRegionList(){
+function renderHazeRegionList(){
   const body=document.getElementById("leftPanelBody");
-  const r=state.psi.items[0].readings;
+  const S=hazeSeries();
   body.innerHTML=`<div class="region-list">`+REGIONS.map(k=>{
-    const v=pm25ToAQI(r.pm25_twenty_four_hourly[k]);
-    const b=aqiBand(v);
     const active=state.activeKey===k;
-    const pm=t("pm25Line").replace("{v}",r.pm25_twenty_four_hourly[k]);
+    if(!S.has1h){
+      const a=S.aqiOf(k); if(a==null) return "";
+      const b=aqiBand(a);
+      return `<div class="region-row ${active?'active':''}" data-key="${k}">
+        <span class="badge" style="background:${hexA(b.color,.16)};color:${b.color}">${bandLabel(b)}</span>
+        <div><div class="name">${regionName(k)}</div><div class="sub">${t("pm25Line").replace("{v}",S.pmOf(k))}</div></div>
+        <span class="val" style="color:${b.color}">${a}</span>
+      </div>`;
+    }
+    const v=S.pmOf(k); if(v==null) return "";
+    const b=S.bandOf(k), a=S.aqiOf(k), p=S.psi24Of(k);
     return `<div class="region-row ${active?'active':''}" data-key="${k}">
       <span class="badge" style="background:${hexA(b.color,.16)};color:${b.color}">${bandLabel(b)}</span>
-      <div><div class="name">${regionName(k)}</div><div class="sub">${pm}</div></div>
+      <div><div class="name">${regionName(k)}</div><div class="sub">${t("hazeRowSub").replace("{a}",a==null?"—":a).replace("{p}",p==null?"—":p)}</div></div>
       <span class="val" style="color:${b.color}">${v}</span>
     </div>`;
-  }).join("")+`</div>`;
+  }).join("")+`</div>`
+  +(S.has1h?`<p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t("hazeNote")}</p>`
+            :`<p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t("hazeNote24")}</p>`);
   body.querySelectorAll(".region-row").forEach(row=>{
     row.addEventListener("click",()=>{const k=row.getAttribute("data-key");state.activeKey=state.activeKey===k?null:k;renderAll();});
   });
 }
 
-function renderAQIDist(){
+function renderHazeDist(){
   const body=document.getElementById("rightPanelBody");
-  const r=state.psi.items[0].readings;
+  const S=hazeSeries();
   const counts={};
-  REGIONS.forEach(k=>{const b=aqiBand(pm25ToAQI(r.pm25_twenty_four_hourly[k]));counts[b.labelKey]=(counts[b.labelKey]||0)+1;});
-  const tiles=AQI_BP.filter(s=>counts[s.labelKey]).map(s=>`
+  REGIONS.forEach(k=>{const b=S.has1h?S.bandOf(k):aqiBand(S.aqiOf(k));if(b)counts[b.labelKey]=(counts[b.labelKey]||0)+1;});
+  const BANDS=S.has1h?PM25_1H_BP:AQI_BP;
+  const tiles=BANDS.filter(s=>counts[s.labelKey]).map(s=>`
     <div class="summary-tile" style="border-color:${s.color}">
       <div class="top" style="color:${s.color}">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6"/></svg>
@@ -865,7 +939,7 @@ function renderAQIDist(){
     </div>
   `).join("");
   body.innerHTML=`<div class="summary-grid">${tiles}</div>
-    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t("aqiNote")}</p>`;
+    <p style="margin:12px 0 0;font-size:10.5px;color:var(--muted);line-height:1.5">${t(S.has1h?"hazeNote":"hazeNote24")}</p>`;
 }
 
 function renderPSIRegionList(){

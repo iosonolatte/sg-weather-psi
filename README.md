@@ -10,6 +10,11 @@
 - **底图切换**：Default / Night / Grey 三种 OneMap 样式。
 - **中英文双语**：界面默认跟随浏览器语言，可在右上角切换，选择记忆到 `localStorage`。
 - **移动端优化**：窄屏下头部与控制栏纵向堆叠、点击区 ≥ 42px、地图高度按视口（`vh`）自适应、适配 iOS 安全区；东西两侧气泡在窄屏自动内移以保证完整可见。
+- **分享 / 截图**：点右上角 **Share** 生成当前视图的 PNG，可直接转发到微信。截图范围随屏幕自适应——宽屏含地图与全部面板（接近方形），窄屏只取地图与图例（避免 3:1 长条被微信压成缩略图，区域数值已在圆标上）。按环境给出三种指引：
+  - 系统浏览器（Safari / Chrome）：显示「分享到应用」按钮，走 `navigator.share({files})` 直达微信；
+  - 微信内置浏览器：该 API 不可用，按钮隐藏，提示**长按图片保存**再转发；
+  - 桌面：提示右键保存。
+  保存的文件名形如 `sg-psi-18_Oct_14_00.png`（模式 + 数据时间戳）。
 
 ## 数据来源
 
@@ -26,6 +31,7 @@
 
 - 单文件 HTML（内联 CSS + 原生 JS），无构建步骤
 - [Leaflet](https://leafletjs.com/) 1.9.4（通过 unpkg CDN 加载）渲染地图
+- [html2canvas](https://html2canvas.hertzen.com/) 1.4.1（**按需懒加载**，仅点 Share 时引入）生成分享截图
 - Google Fonts（Outfit / JetBrains Mono）
 
 ## 目录结构
@@ -78,3 +84,7 @@ npx wrangler pages deploy deploy --project-name sg-weather --branch main
   - NEA 1 小时 PM2.5 等级与「若持续 24 小时对应的 PSI」关系：正常→Good–Moderate、偏高→Unhealthy、高→Very Unhealthy、很高→Hazardous。
 - **1h PSI 同理**：NEA 官方仅发布 24 小时 PSI，1 小时 PSI 由 1 小时 PM2.5 按 NEA PM2.5 分指数断点换算。
 - **数据可用性**：`/environment/pm25` 不可用时，雾霾面板自动降级为「由 24 小时 PM2.5 计算的 US EPA AQI」，并给出说明。
+- **分享截图的两个实现约束**：
+  1. html2canvas **不解析 CSS 自定义属性**，而本页所有颜色都来自 `:root` 变量。`onclone` 回调会把解析后的字面值重新声明进克隆文档，否则截图为无色/黑底。
+  2. OneMap 瓦片必须带 `crossOrigin:"anonymous"`（见 `TILE_OPTS`），否则瓦片污染 canvas，`toBlob()` 直接抛错。OneMap 返回 `access-control-allow-origin: *`，满足条件。
+  3. 分享弹层自身是 `position:fixed`，html2canvas 会把它画到画布顶部而不受裁剪框影响——所以是在**克隆文档**里隐藏遮罩，不动真实 DOM。

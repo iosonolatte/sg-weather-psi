@@ -68,6 +68,9 @@
   .refresh-btn.loading svg{transform:rotate(360deg)}
   .lang-btn{display:inline-flex;align-items:center;justify-content:center;min-width:46px;padding:8px 12px;border-radius:9px;background:var(--surface);border:1px solid var(--line);font:600 12.5px/1 'Outfit',sans-serif;color:var(--text-2);cursor:pointer;transition:all .2s}
   .lang-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .action-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;background:var(--surface);border:1px solid var(--line);font:500 13px/1 'Outfit',sans-serif;color:var(--text-2);cursor:pointer;transition:all .2s}
+  .action-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+  .action-btn:disabled{opacity:.5;cursor:default;transform:none;border-color:var(--line);color:var(--muted)}
   .updated{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
 
   /* Controls bar */
@@ -214,10 +217,33 @@
     .window-toggle button{min-height:32px;padding:5px 13px;font-size:11.5px}
     .region-row .val{font-size:15px}
     .summary-tile .num{font-size:18px}
+    .action-btn{flex:1;justify-content:center;min-height:42px}
   }
   @media(max-width:380px){
     .title-block h1{font-size:18px}
   }
+
+  /* ---------- Share sheet ---------- */
+  .share-mask{position:fixed;inset:0;z-index:1000;background:rgba(10,10,10,.62);display:none;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .18s}
+  .share-mask.on{display:flex;opacity:1}
+  .share-sheet{background:var(--surface);border-radius:16px;padding:16px;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+  .share-sheet h4{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .share-sheet h4 .x{all:unset;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:0 4px}
+  .share-sheet h4 .x:hover{color:var(--text)}
+  .shot-stage{background:var(--bg);border:1px solid var(--line-soft);border-radius:10px;padding:10px;overflow:auto;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  .shot-stage img{max-width:100%;max-height:56vh;display:block;border-radius:6px}
+  .share-hint{font-size:12px;color:var(--muted);line-height:1.5;margin:0;text-align:center}
+  .share-hint b{color:var(--text-2);font-weight:600}
+  .share-acts{display:flex;gap:10px}
+  .share-acts button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border-radius:10px;font:600 13.5px/1 'Outfit',sans-serif;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--text-2);transition:all .2s}
+  .share-acts button:hover{border-color:var(--accent);color:var(--accent)}
+  .share-acts button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .share-acts button.pri:hover{background:var(--accent-2);border-color:var(--accent-2);color:#fff}
+  .share-busy{display:flex;flex-direction:column;align-items:center;gap:12px;padding:34px 0}
+  .share-busy .ring{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:shr 0.8s linear infinite}
+  @keyframes shr{to{transform:rotate(360deg)}}
+  .share-busy span{font-size:12.5px;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){.share-busy .ring{animation:none}}
 </style>
 </head>
 <body>
@@ -234,6 +260,10 @@
     <div class="header-actions">
       <div class="btn-row">
         <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+        <button class="action-btn" id="shareBtn" onclick="shareShot()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v11"/><path d="m8 7 4-4 4 4"/></svg>
+          <span data-i18n="share">Share</span>
+        </button>
         <button class="refresh-btn" id="refreshBtn" onclick="loadAll(true)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
           <span id="refreshLabel" data-i18n="refresh">Refresh</span>
@@ -294,6 +324,21 @@
   </p>
 </div>
 
+<!-- Share sheet -->
+<div class="share-mask" id="shareMask" onclick="if(event.target===this)closeShare()">
+  <div class="share-sheet" role="dialog" aria-modal="true">
+    <h4><span data-i18n="shareTitle">Share this view</span><button class="x" onclick="closeShare()" aria-label="close">✕</button></h4>
+    <div class="shot-stage" id="shotStage">
+      <div class="share-busy" id="shotBusy"><div class="ring"></div><span data-i18n="shareBusy">Generating image…</span></div>
+    </div>
+    <p class="share-hint" id="shareHint"></p>
+    <div class="share-acts">
+      <button id="shotSaveBtn" onclick="saveShot()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span data-i18n="shareSave">Save image</span></button>
+      <button id="shotShareBtn" class="pri" onclick="nativeShare()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v11"/><path d="m8 7 4-4 4 4"/></svg><span data-i18n="shareVia">Share to app</span></button>
+    </div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
 <script>
 // ============================================================
@@ -327,6 +372,14 @@ const I18N = {
     clickNote:"Click any area on the map or list to highlight its location.",
     foot:'Base map &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> contributors · Singapore Land Authority.<br>Data: <code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · Haze = 1-hour PM2.5 in NEA bands, with US EPA AQI and 24-h PSI for reference. Click a region/area to highlight it on the map.',
     errLoad:"Failed to load data.",
+    share:"Share", shareTitle:"Share this view",
+    shareBusy:"Generating image…",
+    shareSave:"Save image", shareVia:"Share to app",
+    shareHintSys:"Tap <b>Share to app</b> and pick WeChat — or save the image and send it from your album.",
+    shareHintWeChat:"WeChat's built-in browser can't hand off a file. <b>Long-press the image to save</b>, then send it from your album.",
+    shareHintDesktop:"Right-click the image to save, or use <b>Share to app</b>.",
+    shareFail:"Couldn't generate the image — please try again.",
+    shareNoData:"Data is still loading, try again in a moment.",
     langOther:"中文"
   },
   zh: {
@@ -356,6 +409,14 @@ const I18N = {
     clickNote:"点击地图或列表中的任意区域以在地图上高亮。",
     foot:'底图 &copy; <strong><a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a></strong> 贡献者 · 新加坡土地管理局。<br>数据来源：<code>api.data.gov.sg/v1/environment/psi</code> + <code>pm25</code> + <code>2-hour-weather-forecast</code> · 雾霾 = 1 小时 PM2.5 按 NEA 等级，并列 US EPA AQI 与官方 24 小时 PSI 作参考。点击区域可在地图上高亮。',
     errLoad:"数据加载失败。",
+    share:"分享", shareTitle:"分享当前视图",
+    shareBusy:"正在生成图片…",
+    shareSave:"保存图片", shareVia:"分享到应用",
+    shareHintSys:"点 <b>分享到应用</b> 选微信；或先保存图片，再从相册发送。",
+    shareHintWeChat:"微信内置浏览器无法直接转发文件，<b>长按图片保存</b>，再从相册发送。",
+    shareHintDesktop:"右键图片即可保存，或点 <b>分享到应用</b>。",
+    shareFail:"图片生成失败，请重试。",
+    shareNoData:"数据还在加载，请稍候重试。",
     langOther:"EN"
   }
 };
@@ -584,7 +645,10 @@ const TILE_OPTS={
   maxZoom:19,
   minZoom:10,        // OneMap supports z>=10; 11 clamped fitBounds on narrow phones and pushed W/E regions off-screen
   attribution:ONEMAP_ATTR,
-  errorTileUrl:""
+  errorTileUrl:"",
+  // Required for html2canvas: without CORS the tiles taint the canvas and shareShot()
+  // would produce a blank/blocked image. OneMap answers `access-control-allow-origin: *`.
+  crossOrigin:"anonymous"
 };
 const tileUrl=style=>`${ONEMAP_BASE}/${style}/{z}/{x}/{y}.png`;
 const tileLayers=[];  // mounted basemaps, oldest first — only the newest should survive
@@ -1045,6 +1109,9 @@ function applyI18n(){
     el.innerHTML = t(el.getAttribute("data-i18n"));
   });
   document.getElementById("langBtn").textContent = t("langOther");
+  // Keep an open share sheet in sync with the new language
+  if(document.getElementById("shareMask").classList.contains("on")&&_shotBlob)
+    document.getElementById("shareHint").innerHTML=shareHintHtml();
   // Re-render dynamic content so it picks up the new language
   if(state.psi||state.rain) renderAll();
   if(state.lastTs) setUpdated(state.lastTs, state.lastManual);
@@ -1088,6 +1155,201 @@ document.querySelectorAll("#psiWindowToggle button").forEach(btn=>{
 
 applyI18n();
 loadAll(false);
+
+// ============================================================
+//  Share / screenshot
+// ============================================================
+// Produces a PNG of the current view that can be saved or handed to another app
+// (WeChat, Messages, …). Two constraints shape the implementation:
+//
+//  1. html2canvas does not resolve CSS custom properties, and every colour in this
+//     page comes from :root vars. onclone() re-declares the resolved values so the
+//     cloned document paints with literal colours.
+//  2. The OneMap basemap is a grid of <img> tiles. Without crossOrigin:"anonymous"
+//     on the tile layer they taint the canvas and toDataURL() throws. See TILE_OPTS.
+const SHARE_LIB="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js";
+let _h2cPromise=null;
+let _shotBlob=null;
+let _shotUrl=null;
+
+function loadH2C(){
+  if(window.html2canvas) return Promise.resolve(window.html2canvas);
+  if(!_h2cPromise){
+    _h2cPromise=new Promise((resolve,reject)=>{
+      const s=document.createElement("script");
+      s.src=SHARE_LIB;
+      s.onload=()=>window.html2canvas?resolve(window.html2canvas):reject(new Error("html2canvas loaded but undefined"));
+      s.onerror=()=>{_h2cPromise=null;reject(new Error("html2canvas script failed to load"))};
+      document.head.appendChild(s);
+    });
+  }
+  return _h2cPromise;
+}
+
+// Region of the page that makes a good standalone picture.
+//   wide screens — the two panels sit beside the map, so including them keeps the
+//                  picture close to square and nothing is cut off.
+//   phones       — the panel grid stacks *below* the map, which would stretch the
+//                  image into a ~3:1 strip that WeChat shrinks to a thumbnail. The
+//                  region circles already carry the per-region numbers, so the
+//                  panels are dropped and the result lands near 4:5.
+function shotRegion(){
+  const wrap=document.querySelector(".wrap");
+  const mapCard=document.querySelector(".map-card");
+  const grid=document.querySelector(".panel-grid");
+  const wr=wrap.getBoundingClientRect();
+  const wide=window.matchMedia("(min-width:881px)").matches;
+  const bottom=wide
+    ? Math.max(mapCard.getBoundingClientRect().bottom,grid.getBoundingClientRect().bottom)
+    : mapCard.getBoundingClientRect().bottom;
+  return {
+    x:wr.left+window.scrollX,
+    y:wr.top+window.scrollY,
+    width:wr.width,
+    height:Math.max(120,bottom-wr.top)
+  };
+}
+
+// html2canvas renders from a clone of the document, so everything we change here
+// affects the picture only — the live page keeps its mask, spinner and open state.
+function prepClone(doc){
+  // The share sheet is position:fixed, which html2canvas paints at the top of the
+  // canvas regardless of the crop box — it would otherwise photograph itself.
+  const mask=doc.getElementById("shareMask");
+  if(mask) mask.style.display="none";
+  flattenVars(doc);
+}
+
+// Flatten :root vars into literal values for the cloned document.
+function flattenVars(doc){
+  const out=[];
+  const seen=new Set();
+  const push=(name,val)=>{
+    name=name.trim(); val=val.trim();
+    if(!name.startsWith("--")||!val||seen.has(name)) return;
+    seen.add(name); out.push(`${name}:${val}`);
+  };
+  // 1) straight from the authoring sheet, so values keep their original form
+  if(typeof CSSStyleRule!=="undefined"){
+    for(const sheet of Array.from(document.styleSheets)){
+      let rules;
+      try{rules=sheet.cssRules}catch(e){continue}   // cross-origin sheet
+      if(!rules) continue;
+      for(const r of Array.from(rules)){
+        if(!(r instanceof CSSStyleRule)) continue;
+        if(!r.selectorText||!/:root/.test(r.selectorText)) continue;
+        for(const prop of Array.from(r.style)) push(prop,r.style.getPropertyValue(prop));
+      }
+    }
+  }
+  // 2) fallback to whatever the browser resolved — catches vars injected by JS
+  try{
+    const cs=getComputedStyle(document.documentElement);
+    for(const name of Array.from(cs)) push(name,cs.getPropertyValue(name));
+  }catch(e){/* ignore */}
+  if(!out.length) return;
+  const st=doc.createElement("style");
+  st.textContent=`:root{${out.join(";")}}`;
+  doc.head.appendChild(st);
+}
+
+function isWeChat(){return /micromessenger/i.test(navigator.userAgent)}
+
+function shareHintHtml(){
+  if(isWeChat()) return t("shareHintWeChat");
+  if(window.matchMedia("(pointer:coarse)").matches) return t("shareHintSys");
+  return t("shareHintDesktop");
+}
+
+function openShareSheet(){
+  document.getElementById("shareMask").classList.add("on");
+  document.body.style.overflow="hidden";
+}
+function closeShare(){
+  document.getElementById("shareMask").classList.remove("on");
+  document.body.style.overflow="";
+  revokeShot();
+}
+function revokeShot(){
+  if(_shotUrl){URL.revokeObjectURL(_shotUrl);_shotUrl=null;_shotBlob=null}
+}
+
+async function shareShot(){
+  if(!state.psi||!state.rain){alert(t("shareNoData"));return}
+  const btn=document.getElementById("shareBtn");
+  btn.disabled=true;
+  const stage=document.getElementById("shotStage");
+  openShareSheet();
+  stage.innerHTML=`<div class="share-busy"><div class="ring"></div><span>${t("shareBusy")}</span></div>`;
+  document.getElementById("shotSaveBtn").style.display="";
+  document.getElementById("shotShareBtn").style.display="none";
+  document.getElementById("shareHint").innerHTML="";
+  try{
+    const h2c=await loadH2C();
+    // Let any pending Leaflet re-layout settle so we don't capture a mid-pan frame.
+    map.invalidateSize();
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const r=shotRegion();
+    const canvas=await h2c(document.body,{
+      x:r.x, y:r.y, width:r.width, height:r.height,
+      scale:window.innerWidth<768?2:1.5,
+      useCORS:true, allowTaint:false, backgroundColor:null, logging:false,
+      scrollX:window.scrollX, scrollY:window.scrollY,
+      windowWidth:document.documentElement.clientWidth,
+      windowHeight:document.documentElement.clientHeight,
+      onclone:prepClone
+    });
+    _shotBlob=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error("toBlob failed")),"image/png"));
+    revokeShot();
+    _shotUrl=URL.createObjectURL(_shotBlob);
+
+    const img=new Image();
+    img.alt="share";
+    img.src=_shotUrl;
+    stage.innerHTML="";
+    stage.appendChild(img);
+
+    // Web Share with files is the only way to reach WeChat directly, and it is
+    // unavailable inside WeChat's own browser — hence the long-press fallback.
+    const canShare=!!(navigator.canShare&&navigator.canShare({files:[new File([_shotBlob],"sg-weather.png",{type:"image/png"})]}));
+    document.getElementById("shotShareBtn").style.display=canShare?"":"none";
+    document.getElementById("shareHint").innerHTML=shareHintHtml();
+  }catch(e){
+    console.error("shareShot",e);
+    stage.innerHTML=`<div style="padding:28px 10px;text-align:center;color:var(--muted);font-size:13px">${t("shareFail")}</div>`;
+    document.getElementById("shareHint").innerHTML="";
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+function shotFilename(){
+  const ts=state.lastTs?fmtDayTime(state.lastTs).replace(/[^\x20-\x7e]/g,"").replace(/\s+/g,"_"):"snapshot";
+  const mode=state.mode==="aqi"?"haze":state.mode;
+  return `sg-${mode}-${ts}.png`;
+}
+
+function saveShot(){
+  if(!_shotUrl) return;
+  const a=document.createElement("a");
+  a.href=_shotUrl;
+  a.download=shotFilename();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function nativeShare(){
+  if(!_shotBlob) return;
+  const file=new File([_shotBlob],shotFilename(),{type:"image/png"});
+  try{
+    await navigator.share({files:[file],title:document.title});
+  }catch(e){
+    if(e&&e.name==="AbortError") return;   // user dismissed the sheet
+    console.error("nativeShare",e);
+  }
+}
 </script>
 </body>
 </html>

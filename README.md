@@ -5,7 +5,7 @@
 ## 功能
 
 - **PSI 模式**：展示新加坡 5 个区域（West / North / Central / East / South）的实时 PSI 读数，圆标按 PSI 等级着色（优 / 中等 / 不健康 / 非常不健康 / 危险）；面板内可切换 **24h / 1h** 时间窗。
-- **烟霾（Haze）模式**：主显示 **1 小时 PM2.5 浓度（µg/m³）**，按 **NEA 官方的 1 小时 PM2.5 四级**（正常 / 偏高 / 高 / 很高）着色；每行并列 **US EPA AQI** 与 **NEA 官方 24 小时 PSI** 作参考。
+- **雾霾（Haze）模式**：主显示 **1 小时 PM2.5 浓度（µg/m³）**，按 **NEA 官方的 1 小时 PM2.5 四级**（正常 / 偏高 / 高 / 很高）着色；每行并列 **US EPA AQI** 与 **NEA 官方 24 小时 PSI** 作参考。
 - **降雨模式**：基于 NEA 2 小时天气预报，在约 47 个区域上标注天气图标（晴 / 多云 / 雷阵雨 等）。
 - **底图切换**：Default / Night / Grey 三种 OneMap 样式。
 - **中英文双语**：界面默认跟随浏览器语言，可在右上角切换，选择记忆到 `localStorage`。
@@ -77,4 +77,4 @@ npx wrangler pages deploy deploy --project-name sg-weather --branch main
   - US EPA AQI 与官方 24 小时 PSI 仅作副位参考并列展示。
   - NEA 1 小时 PM2.5 等级与「若持续 24 小时对应的 PSI」关系：正常→Good–Moderate、偏高→Unhealthy、高→Very Unhealthy、很高→Hazardous。
 - **1h PSI 同理**：NEA 官方仅发布 24 小时 PSI，1 小时 PSI 由 1 小时 PM2.5 按 NEA PM2.5 分指数断点换算。
-- **数据可用性**：`/environment/pm25` 不可用时，烟霾面板自动降级为「由 24 小时 PM2.5 计算的 US EPA AQI」，并给出说明。
+- **数据可用性**：`/environment/pm25` 不可用时，雾霾面板自动降级为「由 24 小时 PM2.5 计算的 US EPA AQI」，并给出说明。

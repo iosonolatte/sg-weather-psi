@@ -15,6 +15,8 @@
   - 微信内置浏览器：该 API 不可用，按钮隐藏，提示**长按图片保存**再转发；
   - 桌面：提示右键保存。
   保存的文件名形如 `sg-psi-18_Oct_14_00.png`（模式 + 数据时间戳）。
+- **分享图内嵌二维码**（默认开启，可在分享弹层里关闭）：二维码编码当前视图的深链 `?m=<psi|haze|rain>&l=<en|zh>`，对方扫码即可打开**同一个标签页、同一种语言**的实时页面。深链参数在首屏渲染前解析，扫完直接落到对应视图。
+  从 `file://` 或 `localhost` 本地预览生成分享图时，二维码改指向线上 HTTPS 页面，避免把手机无法访问的本机路径分享出去。
 
 ## 数据来源
 
@@ -32,6 +34,7 @@
 - 单文件 HTML（内联 CSS + 原生 JS），无构建步骤
 - [Leaflet](https://leafletjs.com/) 1.9.4（通过 unpkg CDN 加载）渲染地图
 - [html2canvas](https://html2canvas.hertzen.com/) 1.4.1（**按需懒加载**，仅点 Share 时引入）生成分享截图
+- [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4（同样懒加载）生成内嵌二维码
 - Google Fonts（Outfit / JetBrains Mono）
 
 ## 目录结构
@@ -84,7 +87,13 @@ npx wrangler pages deploy deploy --project-name sg-weather --branch main
   - NEA 1 小时 PM2.5 等级与「若持续 24 小时对应的 PSI」关系：正常→Good–Moderate、偏高→Unhealthy、高→Very Unhealthy、很高→Hazardous。
 - **1h PSI 同理**：NEA 官方仅发布 24 小时 PSI，1 小时 PSI 由 1 小时 PM2.5 按 NEA PM2.5 分指数断点换算。
 - **数据可用性**：`/environment/pm25` 不可用时，雾霾面板自动降级为「由 24 小时 PM2.5 计算的 US EPA AQI」，并给出说明。
-- **分享截图的两个实现约束**：
+- **分享截图与二维码的实现约束**：
   1. html2canvas **不解析 CSS 自定义属性**，而本页所有颜色都来自 `:root` 变量。`onclone` 回调会把解析后的字面值重新声明进克隆文档，否则截图为无色/黑底。
   2. OneMap 瓦片必须带 `crossOrigin:"anonymous"`（见 `TILE_OPTS`），否则瓦片污染 canvas，`toBlob()` 直接抛错。OneMap 返回 `access-control-allow-origin: *`，满足条件。
   3. 分享弹层自身是 `position:fixed`，html2canvas 会把它画到画布顶部而不受裁剪框影响——所以是在**克隆文档**里隐藏遮罩，不动真实 DOM。
+  4. **html2canvas 返回的 canvas 残留 `scale` 变换**且不还原。在它上面直接 `fillRect()` 会被再乘一次 scale 而画到画布外——所以 `paintQr()` 先 `ctx.setTransform(1,0,0,1,0,0)` 重置，再按输出像素坐标绘制。
+  5. 二维码**画在已渲染好的 canvas 上**，而不是塞进 DOM：这样不受 CSS 变量、克隆文档 quirks 与布局抖动影响，模块边缘也保持像素级锐利。底层用 [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4（同样懒加载），按模块逐格 `fillRect` 而非用它的 `createImgTag()`，以便精确控制尺寸与静区。
+  6. **二维码尺寸取图宽的百分比（16%），不是固定像素**。因为图片到对方手机上会被缩到屏宽，比例才是决定可扫性的因素。实测（`opencv` + `zxing-cpp` 双解码器，覆盖 Pixel 7 / iPhone 14·15·11 / iPhone SE / 半屏预览 / 聊天列表缩略图，并模拟微信的 JPEG 重压缩）：16% 全部通过，13% 在 1100px 以下失败。
+  7. **纠错等级取 Q(25%) 而非 M(15%)**，并在深链里用最短参数名（`?m=&l=`，不带日期）——版本从 5 降到 3、模块数 37 → 29，这才让 16% 的小尺寸成立。
+  8. 位置锚在 `#map` 右上角并内缩，避开地图下方图例与右下角 OneMap 署名。
+  9. 白底板是必需的——底图从浅蓝到 Night 的近黑都有，二维码没有自己的静区底色在深色底图上无法识别。

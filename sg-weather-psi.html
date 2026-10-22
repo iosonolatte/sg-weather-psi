@@ -517,7 +517,9 @@ function pm25ToAQI(c){
   return Math.round((seg.iHi-seg.iLo)/(seg.cHi-seg.cLo)*(c-seg.cLo)+seg.iLo);
 }
 function aqiBand(v){
-  const seg=AQI_BP.find(s=>v<=s.iHi)||AQI_BP[AQI_BP.length-1];
+  if(v==null||v===""||!Number.isFinite(Number(v)))
+    return {labelKey:"bandUnavailable",color:"#94a3b8",range:"—"};
+  const seg=AQI_BP.find(s=>Number(v)<=s.iHi)||AQI_BP[AQI_BP.length-1];
   return {labelKey:seg.labelKey,color:seg.color,range:seg.iLo+"-"+seg.iHi};
 }
 

@@ -2,3 +2,4 @@
 .wrangler/
 .workbuddy/
 deploy/
+reminder-*.md

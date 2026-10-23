@@ -463,6 +463,25 @@ const REGIONS=["west","north","central","east","south"];
 const REGION_ZH={west:"西部",north:"北部",central:"中部",east:"东部",south:"南部"};
 function regionName(k){ return LANG==='zh' ? (REGION_ZH[k]||cap(k)) : cap(k); }
 
+// Chinese names for the 47 NEA 2-hour forecast areas. The API only returns English
+// area names, so without this map the Rain mode stays half-English in Chinese UI.
+const AREA_ZH={
+  "Ang Mo Kio":"宏茂桥","Bedok":"勿刹","Bishan":"碧山","Boon Lay":"文礼",
+  "Bukit Batok":"勿加","Bukit Merah":"红山","Bukit Panjang":"长明","Bukit Timah":"淡滨尼",
+  "Central Water Catchment":"中央集水区","Changi":"樟宜","Choa Chu Kang":"蔡厝港",
+  "City":"市区","Clementi":"甘榜格南","Geylang":"芽笼","Hougang":"后港",
+  "Jalan Bahar":"巴哈","Jurong East":"裕廊东","Jurong Island":"裕廊岛","Jurong West":"裕廊西",
+  "Kallang":"加冷","Lim Chu Kang":"林楚坎","Mandai":"万礼","Marine Parade":"马林百列",
+  "Novena":"诺维纳","Pasir Ris":"白沙","Paya Lebar":"巴耶利峇","Pioneer":"先锋",
+  "Pulau Tekong":"德光岛","Pulau Ubin":"乌敏岛","Punggol":"榜鹅","Queenstown":"皇后镇",
+  "Seletar":"实龙岗","Sembawang":"三巴旺","Sengkang":"盛港","Sentosa":"圣淘沙",
+  "Serangoon":"实龙岗","Southern Islands":"南方岛屿","Sungei Kadut":"双溪笃",
+  "Tampines":"淡滨尼","Tanglin":"东陵","Tengah":"腾格","Toa Payoh":"大巴窑",
+  "Tuas":"大士","Western Islands":"西部岛屿","Western Water Catchment":"西部集水区",
+  "Woodlands":"兀兰","Yishun":"义顺"
+};
+function areaName(k){ return LANG==='zh' ? (AREA_ZH[k]||k) : k; }
+
 // PSI region centroids (from NEA API label_location) — true anchor points
 const REGION_CENTROIDS={
   west:    [1.35735,103.700],
@@ -605,33 +624,46 @@ function rainLabel(kind){
   const k=({rain:"rkLight",heavy:"rkHeavy",thundery:"rkThundery",cloudy:"rkCloudy",sun:"rkSun",moon:"rkMoon"})[kind]||"rkOther";
   return t(k);
 }
-// Translate NEA 2-hour forecast phrasing (API returns English)
+// Translate NEA 2-hour forecast phrasing (API returns English).
+//
+// The API composes forecasts from a small grammar — "<condition> with <condition>",
+// optionally ending in "with Gusty Winds". A flat chain of regex replacements
+// used to work but broke on the longer phrases: replacing "Thundery Showers"
+// before "with Thundery Showers" shredded the connector and produced mixed
+// output like "雾霾 with 雷阵雨". So the phrase is now parsed, not pattern-matched.
+const FORECAST_BASE={
+  "Fair (Day)":"晴（日间）","Fair (Night)":"晴（夜间）",
+  "Cloudy":"多云","Partly Cloudy":"局部多云","Overcast":"阴天","Sunny":"晴","Fair":"晴",
+  "Light Rain":"小雨","Moderate Rain":"中雨","Heavy Rain":"大雨","Rain":"雨",
+  "Light Showers":"小阵雨","Showers":"阵雨","Heavy Showers":"强阵雨","Thundery Showers":"雷阵雨",
+  "Windy":"大风","Mist":"薄雾","Hazy":"雾霾","Slightly Hazy":"轻微雾霾","Fog":"雾"
+};
 function trForecast(s){
   if(LANG==='en') return s;
-  const m={
-    "Cloudy":"多云","Partly Cloudy":"局部多云","Overcast":"阴天","Sunny":"晴","Fair":"晴",
-    "Light Rain":"小雨","Moderate Rain":"中雨","Heavy Rain":"大雨","Rain":"雨",
-    "Light Showers":"小阵雨","Showers":"阵雨","Heavy Showers":"强阵雨",
-    "Thundery Showers":"雷阵雨","Thundery Showers with Gusty Winds":"雷阵雨伴阵风",
-    "Windy":"大风","Mist":"薄雾","Hazy":"雾霾","Slightly Hazy":"轻微雾霾","Fog":"雾",
+  // Known full phrases first — the common combos read better word-for-word
+  // ("大风伴阵雨" rather than "大风有阵雨").
+  const exact={
     "Cloudy with Light Rain":"多云有小雨","Cloudy with Moderate Rain":"多云有中雨",
     "Cloudy with Heavy Rain":"多云有大雨","Cloudy with Showers":"多云有阵雨",
     "Cloudy with Thundery Showers":"多云有雷阵雨","Windy with Showers":"大风伴阵雨",
-    "Windy with Rain":"大风伴雨","Hazy with Light Rain":"雾霾伴小雨"
+    "Windy with Rain":"大风伴雨","Hazy with Light Rain":"雾霾伴小雨",
+    "Thundery Showers with Gusty Winds":"雷阵雨伴阵风"
   };
-  if(m[s]) return m[s];
-  let o=s;
-  o=o.replace(/Thundery Showers with Gusty Winds/i,"雷阵雨伴阵风")
-     .replace(/Thundery Showers/i,"雷阵雨")
-     .replace(/Light Showers/i,"小阵雨").replace(/Heavy Showers/i,"强阵雨").replace(/Showers/i,"阵雨")
-     .replace(/with Gusty Winds/i,"伴阵风")
-     .replace(/Light Rain/i,"小雨").replace(/Moderate Rain/i,"中雨").replace(/Heavy Rain/i,"大雨")
-     .replace(/with Light Rain/i,"有小雨").replace(/with Moderate Rain/i,"有中雨").replace(/with Heavy Rain/i,"有大雨")
-     .replace(/with Thundery Showers/i,"有雷阵雨").replace(/with Showers/i,"有阵雨").replace(/with Rain/i,"有雨")
-     .replace(/Thundery/i,"雷阵雨").replace(/Cloudy/i,"多云").replace(/Partly Cloudy/i,"局部多云")
-     .replace(/Windy/i,"大风").replace(/Sunny/i,"晴").replace(/Fair/i,"晴").replace(/Rain/i,"雨")
-     .replace(/Mist/i,"薄雾").replace(/Hazy/i,"雾霾").replace(/Slightly/i,"轻微").replace(/Fog/i,"雾").replace(/Overcast/i,"阴天");
-  return o;
+  if(exact[s]) return exact[s];
+  if(FORECAST_BASE[s]) return FORECAST_BASE[s];
+
+  // Compose: "<A> with <B>" → A + 有/伴 + B. "with" after a windy condition
+  // reads as 伴 ("大风伴阵雨"); after a sky condition it reads as 有 ("多云有阵雨").
+  const parts=s.split(/\s+with\s+/i);
+  if(parts.length===2){
+    const head=FORECAST_BASE[parts[0]];
+    const gusty=/gusty winds/i.test(parts[1]);
+    const tail=gusty?null:FORECAST_BASE[parts[1]];
+    if(head&&gusty) return head+"伴阵风";
+    if(head&&tail) return head+(/windy/i.test(parts[0])?"伴":"有")+tail;
+  }
+  // Unknown phrase — show the original rather than a half-translated mix.
+  return s;
 }
 
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
@@ -642,7 +674,7 @@ function fmtDayTime(iso){return fmtDate(iso)+" "+fmtTime(iso)}
 // ============================================================
 //  State + Leaflet init
 // ============================================================
-const state={mode:"psi",basemap:"Default",psiWindow:"24h",psi:null,pm25:null,rain:null,activeKey:null,firstPSI:true,lastTs:null,lastManual:false};
+const state={mode:"psi",basemap:"Default",psiWindow:"24h",psi:null,pm25:null,rain:null,activeKey:null,firstPSI:true,firstRain:true,lastTs:null,lastManual:false};
 
 const map=L.map("map",{zoomControl:true,attributionControl:true,zoomSnap:0.25})
   .setView([1.3521,103.8198],12);
@@ -718,22 +750,44 @@ let labelLayer=L.layerGroup().addTo(map);
 // ============================================================
 //  Fetch
 // ============================================================
+// Each feed is fetched independently and degrades on its own. A single dead
+// endpoint must not blank the whole page: the PSI/Haze modes only need `psi`
+// (+ `pm25` for the 1-h readings), and the Rain mode only needs `rain`.
+async function fetchJSON(url){
+  try{
+    const r=await fetch(url);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    if(!j||!Array.isArray(j.items)||!j.items.length) throw new Error("empty items");
+    return j;
+  }catch(e){
+    console.warn("fetch failed:",url,e);
+    return null;
+  }
+}
 async function loadAll(manual=false){
   const btn=document.getElementById("refreshBtn"),lbl=document.getElementById("refreshLabel");
   btn.classList.add("loading");lbl.textContent=t("loading");
   try{
     const [psi,rain,pm25]=await Promise.all([
-      fetch(PSI_URL).then(r=>r.json()),
-      fetch(RAIN_URL).then(r=>r.json()),
-      fetch(PM25_URL).then(r=>r.json()).catch(()=>null)   // 1-hr PM2.5 powers the 1h PSI toggle
+      fetchJSON(PSI_URL),
+      fetchJSON(RAIN_URL),
+      fetchJSON(PM25_URL)   // 1-hr PM2.5 powers the 1h PSI toggle; optional
     ]);
     state.psi=psi;state.rain=rain;state.pm25=pm25;state.activeKey=null;
+
+    if(!psi&&!rain){
+      // Nothing at all came back — show the error on both panels.
+      document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
+      document.getElementById("rightPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
+      return;
+    }
     renderAll();
-    const ts=psi.items[0].update_timestamp;
-    state.lastTs=ts;state.lastManual=manual;
-    setUpdated(ts,manual);
+    const ts=(psi&&psi.items[0].update_timestamp)||(rain&&rain.items[0].timestamp)||(rain&&rain.items[0].update_timestamp);
+    if(ts){state.lastTs=ts;state.lastManual=manual;setUpdated(ts,manual);}
   }catch(e){
-    document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${e.message}</div>`;
+    console.error("loadAll",e);
+    document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
     document.getElementById("rightPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
   }finally{
     btn.classList.remove("loading");lbl.textContent=t("refresh");
@@ -764,11 +818,32 @@ function fitRegions(){
   state.firstPSI=false;
 }
 
+// The 47 rain areas reach further than the 5 PSI centroids (Tuas in the west,
+// Southern Islands in the south, Pulau Tekong in the north-east), so fitting the
+// PSI bounds leaves a handful of area icons outside the viewport. Fit the rain
+// bounds separately — once, on the first rain render.
+function fitRainAreas(){
+  if(!state.firstRain||!state.rain) return;
+  const meta=rainMeta();
+  if(!meta||!meta.length) return;
+  const pts=meta.map(a=>[a.label_location.latitude,a.label_location.longitude]);
+  const pad=window.innerWidth<640?[16,40]:[60,60];
+  map.fitBounds(L.latLngBounds(pts),{padding:pad,maxZoom:12,animate:false});
+  state.firstRain=false;
+}
+// Area metadata lives on the item in some responses and at the top level in others.
+function rainMeta(){
+  if(!state.rain) return null;
+  const it=state.rain.items&&state.rain.items[0];
+  if(!it) return null;
+  return it.area_metadata||state.rain.area_metadata||null;
+}
+
 function renderMap(){
   dataLayer.clearLayers();labelLayer.clearLayers();
-  if(state.mode==="psi") renderPSI();
-  else if(state.mode==="aqi") renderHaze();
-  else                   renderRain();
+  if(state.mode==="psi"){ if(state.psi) renderPSI(); }
+  else if(state.mode==="aqi"){ if(state.psi) renderHaze(); }
+  else { if(state.rain) renderRain(); }
 }
 
 // Active PSI series. "24h" = NEA's official PSI; "1h" = PSI-equivalent derived from
@@ -882,7 +957,10 @@ function renderHaze(){
 function renderRain(){
   const item=state.rain.items[0];
   const fcMap={};item.forecasts.forEach(f=>fcMap[f.area]=f.forecast);
-  const meta=item.area_metadata||state.rain.area_metadata;
+  const meta=rainMeta()||[];
+
+  // Fit the rain areas (they reach further out than the 5 PSI centroids).
+  fitRainAreas();
 
   meta.forEach(a=>{
     const f=fcMap[a.name];if(!f) return;
@@ -903,7 +981,7 @@ function renderRain(){
     });
     L.marker([lat,lon],{icon})
       .bindTooltip(
-        `<strong>${a.name}</strong><span class="meta">${trForecast(f)}</span>`,
+        `<strong>${areaName(a.name)}</strong><span class="meta">${trForecast(f)}</span>`,
         {className:"region-tip",direction:"top",sticky:true,offset:[0,-10]}
       )
       .on("click",()=>{state.activeKey=state.activeKey===a.name?null:a.name;renderAll();})
@@ -928,9 +1006,11 @@ function rainGlyphSVG(kind){
 function renderLegend(){
   const lg=document.getElementById("legend");
   if(state.mode==="psi"){
+    if(!state.psi){lg.innerHTML="";return;}
     // In PSI mode the legend panel is on the map itself; bottom legend just shows the 5 NEA bands compactly
     lg.innerHTML=LEGION_BANDS.map(b=>`<span class="legend-item"><span class="legend-swatch" style="background:${b.color}"></span><span><strong>${b.range}</strong> · ${bandLabel(b)}</span></span>`).join("");
   } else if(state.mode==="aqi"){
+    if(!state.psi){lg.innerHTML="";return;}
     const S=hazeSeries();
     const B=S.has1h?PM25_1H_BP:AQI_BP;
     const rng=s=>S.has1h
@@ -939,6 +1019,7 @@ function renderLegend(){
     const prefix=S.has1h?"":"AQI ";
     lg.innerHTML=B.map(s=>`<span class="legend-item"><span class="legend-swatch" style="background:${s.color}"></span><span><strong>${prefix}${rng(s)}</strong> · ${t(s.labelKey)}</span></span>`).join("");
   } else {
+    if(!state.rain){lg.innerHTML="";return;}
     const item=state.rain.items[0];
     const counts={};item.forecasts.forEach(f=>{const k=rainKind(f.forecast);counts[k]=(counts[k]||0)+1});
     const order=["thundery","heavy","rain","cloudy","sun","moon"];
@@ -956,6 +1037,12 @@ function renderPanels(){
   const right=document.getElementById("rightPanel");
   document.getElementById("psiWindowToggle").style.display = state.mode==="psi" ? "" : "none";
   if(state.mode==="psi"){
+    if(!state.psi){
+      setLeftPSI();
+      document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
+      right.style.display="none";
+      return;
+    }
     setLeftPSI();renderPSIRegionList();
     // Mobile: drop the Substance Sub-Indices table — its 6-column grid forces a horizontal
     // scroll on phones; the region list already carries PSI + PM2.5/PM10 per region.
@@ -963,8 +1050,24 @@ function renderPanels(){
     right.style.display="";
     setRightSubstance();renderPSISubstanceTable();
   }
-  else if(state.mode==="aqi"){right.style.display="";setLeftHaze();setRightHaze();renderHazeRegionList();renderHazeDist();}
-  else{right.style.display="";setLeftRain();setRightSummary();renderRainAreaList();renderAreaSummary();}
+  else if(state.mode==="aqi"){
+    if(!state.psi){
+      setLeftHaze();
+      document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
+      right.style.display="none";
+      return;
+    }
+    right.style.display="";setLeftHaze();setRightHaze();renderHazeRegionList();renderHazeDist();
+  }
+  else{
+    if(!state.rain){
+      setLeftRain();
+      document.getElementById("leftPanelBody").innerHTML=`<div class="err">⚠️ ${t("errLoad")}</div>`;
+      right.style.display="none";
+      return;
+    }
+    right.style.display="";setLeftRain();setRightSummary();renderRainAreaList();renderAreaSummary();
+  }
 }
 
 function setLeftPSI(){
@@ -1086,14 +1189,15 @@ function renderRainAreaList(){
   const sorted=[...item.forecasts].sort((a,b)=>{
     const ka=rainKind(a.forecast),kb=rainKind(b.forecast);
     if(order[ka]!==order[kb]) return order[ka]-order[kb];
-    return a.area.localeCompare(b.area);
+    // Sort by the displayed name so the Chinese list is ordered the way it reads.
+    return areaName(a.area).localeCompare(areaName(b.area),"zh");
   });
   body.innerHTML=`<div class="area-list">`+sorted.map(f=>{
     const kind=rainKind(f.forecast);
     const active=state.activeKey===f.area;
     return `<div class="area-row ${active?'active':''}" data-area="${f.area}">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${rainColor(kind)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${rainIconPath(kind)}</svg>
-      <span class="name">${f.area}</span>
+      <span class="name">${areaName(f.area)}</span>
       <span class="desc">${trForecast(f.forecast)}</span>
     </div>`;
   }).join("")+`</div>`;
@@ -1335,7 +1439,7 @@ function revokeShot(){
 }
 
 async function shareShot(){
-  if(!state.psi||!state.rain){alert(t("shareNoData"));return}
+  if(!state.psi&&!state.rain){alert(t("shareNoData"));return}
   openShareSheet();
   await renderShot(true);
 }
@@ -1506,8 +1610,9 @@ async function paintQr(canvas,region){
   const cell=Math.max(3,Math.floor(canvas.width*0.16/total));
   const side=cell*total;
 
-  // Pin to the map's top-right corner so the QR stays clear of the legend below
-  // the map and the OneMap attribution at bottom-right.
+  // Pin to the map's bottom-right corner, as requested. The OneMap attribution
+  // strip sits along the bottom edge of the map, so the code is inset far enough
+  // to leave the "Leaflet | © OneMap" line readable where possible.
   const mapEl=document.getElementById("map");
   const mr=mapEl.getBoundingClientRect();
   const k=canvas.width/region.width;          // css px -> canvas px
@@ -1515,8 +1620,10 @@ async function paintQr(canvas,region){
   const inset=Math.round(8*k);
   // The capture region is in document coordinates; getBoundingClientRect() is
   // viewport-relative. Convert the map edge before measuring within the crop.
+  // Bottom-right anchor: x is measured from the right edge, y from the bottom
+  // edge — both then shift inward by the inset and by the code's own size.
   let x=Math.round(mr.right+window.scrollX-region.x)*k-inset-side;
-  let y=Math.round(mr.top+window.scrollY-region.y)*k+inset;
+  let y=Math.round(mr.bottom+window.scrollY-region.y)*k-inset-side-side;
   x=Math.max(0,Math.min(x,canvas.width-side));
   y=Math.max(0,Math.min(y,canvas.height-side));
 
